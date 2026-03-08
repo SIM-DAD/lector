@@ -18,6 +18,10 @@ launch_log.txt
 # Environment
 .env
 
+# Temp / debug files
+pip_out.txt
+pip_err.txt
+
 # IDE / tooling
 .claude/
 

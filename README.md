@@ -44,10 +44,20 @@ The first run creates a virtual environment and installs all dependencies (~3 GB
 
 ### Manual install
 
-```bash
+**Windows:**
+```bat
 py -3.12 -m venv .venv
 .venv\Scripts\activate
 pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+pip install -r requirements.txt
+.venv\Scripts\python.exe server.py
+```
+
+**Linux / macOS:**
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install torch==2.6.0 torchaudio==2.6.0  # add --index-url …/cu124 if NVIDIA GPU present
 pip install -r requirements.txt
 python server.py
 ```
@@ -75,7 +85,7 @@ python server.py
 
 ```
 server.py            FastAPI backend — TTS, voice management, document parsing
-text_parser.py       .docx / .md → clean plain text (strips citations, Markdown syntax)
+text_parser.py       .docx / .md → Markdown (preserves headings/bold/italic, strips citations)
 static/
   index.html         Single-page frontend (vanilla JS, no framework)
 voices/              Custom voice reference audio — gitignored, created at runtime
