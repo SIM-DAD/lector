@@ -26,7 +26,7 @@ if errorlevel 1 (
 )
 echo [1/4] venv created >> "%LOG%"
 
-call .venv\Scripts\activate.bat >> "%LOG%" 2>&1
+call .venv\Scripts\activate.bat
 
 echo [2/4] Installing PyTorch 2.6.0 + CUDA 12.4  (downloading ~2.5 GB, please wait)...
 pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124 >> "%LOG%" 2>&1
@@ -50,7 +50,7 @@ goto :launch
 
 :: ── Activate existing venv ────────────────────────────────────────────────────
 :activate
-call .venv\Scripts\activate.bat >> "%LOG%" 2>&1
+call .venv\Scripts\activate.bat
 if errorlevel 1 (
     echo ERROR: activate failed >> "%LOG%"
     echo ERROR: Could not activate venv. Delete the .venv folder and rerun.
@@ -65,7 +65,7 @@ echo Starting server at http://127.0.0.1:7860
 echo Log: %LOG%
 echo.
 
-python server.py >> "%LOG%" 2>&1
+.venv\Scripts\python.exe server.py >> "%LOG%" 2>&1
 set ERR=%errorlevel%
 echo [%date% %time%] Server exited, code %ERR% >> "%LOG%"
 

@@ -692,11 +692,26 @@ function startHighlights(words, paraText, paraStart, audioStartTime, speedMult) 
   rafId = requestAnimationFrame(frame);
 }
 
+let _scrollMirror = null;
 function scrollToChar(charPos) {
-  const before = editor.value.substring(0, charPos);
-  const lines  = (before.match(/\n/g) || []).length;
-  const lineH  = parseFloat(getComputedStyle(editor).lineHeight) || 30;
-  editor.scrollTop = Math.max(0, lines * lineH - editor.clientHeight * 0.45);
+  if (!_scrollMirror) {
+    _scrollMirror = document.createElement('div');
+    const cs = getComputedStyle(editor);
+    Object.assign(_scrollMirror.style, {
+      position: 'absolute', top: '0', left: '-9999px',
+      visibility: 'hidden', pointerEvents: 'none',
+      whiteSpace: 'pre-wrap', wordWrap: 'break-word', overflowWrap: 'break-word',
+      fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: cs.fontWeight,
+      lineHeight: cs.lineHeight, letterSpacing: cs.letterSpacing,
+      paddingTop: cs.paddingTop, paddingRight: cs.paddingRight,
+      paddingBottom: cs.paddingBottom, paddingLeft: cs.paddingLeft,
+      boxSizing: 'border-box',
+    });
+    document.body.appendChild(_scrollMirror);
+  }
+  _scrollMirror.style.width = editor.clientWidth + 'px';
+  _scrollMirror.textContent = editor.value.substring(0, charPos);
+  editor.scrollTop = Math.max(0, _scrollMirror.scrollHeight - editor.clientHeight * 0.4);
 }
 
 // ── Playback loop ─────────────────────────────────────────────────────────────
@@ -768,6 +783,7 @@ function setControls(on) {
   btnStop.disabled  = !on;
 }
 function cleanup() {
+  playGen++;  // invalidate any in-flight playFrom instance
   isPlaying = isPaused = stopSignal = false;
   if (rafId)       { cancelAnimationFrame(rafId); rafId = null; }
   if (audioSource) { try { audioSource.stop(); } catch (_) {} audioSource = null; }

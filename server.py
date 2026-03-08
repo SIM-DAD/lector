@@ -273,8 +273,8 @@ async def parse_document(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
-        paragraphs = parse_file(tmp_path)
-        return {"text": "\n\n".join(paragraphs)}
+        text = parse_file(tmp_path)
+        return {"text": text}
     finally:
         Path(tmp_path).unlink(missing_ok=True)
 
