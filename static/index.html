@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScriVocalis</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #f7f6f3;
+      --surface: #ffffff;
+      --border:  #e0ddd8;
+      --text:    #1a1a18;
+      --muted:   #8a8a8a;
+      --accent:  #2563eb;
+      --danger:  #dc2626;
+      --mark:    #fde047;
+    }
+
+    body.dark {
+      --bg:      #1c1c1e;
+      --surface: #2c2c2e;
+      --border:  #3a3a3c;
+      --text:    #f2f2f7;
+      --muted:   #8e8e93;
+      --accent:  #3b82f6;
+      --mark:    #78350f;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Toolbar ─────────────────────────────────────────────────────── */
+    #toolbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-weight: 700; font-size: 15px; color: var(--accent); margin-right: 4px;
+      cursor: default; user-select: none;
+    }
+    /* Unsaved indicator dot */
+    .brand.unsaved::after { content: ' ·'; font-size: 18px; line-height: 0; vertical-align: -2px; }
+
+    #voice-select {
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      font-size: 13px;
+      min-width: 175px;
+      cursor: pointer;
+    }
+
+    .speed-wrap {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--muted);
+    }
+    #rate { width: 88px; accent-color: var(--accent); }
+    #speed-label { min-width: 30px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+    .tbtn {
+      padding: 5px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+      -webkit-appearance: none;
+    }
+    .tbtn:hover { background: var(--border); }
+    #btn-manage-voices { margin-left: auto; }
+    #btn-dark { font-size: 15px; padding: 5px 9px; }
+
+    /* ── Editor ──────────────────────────────────────────────────────── */
+    #editor-wrap {
+      flex: 1; overflow: hidden;
+      display: flex; justify-content: center;
+      padding: 0 20px; background: var(--bg);
+    }
+
+    #editor {
+      width: 100%; max-width: 780px; height: 100%;
+      resize: none; border: none; outline: none;
+      background: transparent;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 17px; line-height: 1.9;
+      color: var(--text); padding: 28px 0;
+      caret-color: var(--accent);
+    }
+    #editor::selection { background: var(--mark); color: var(--text); }
+
+    /* ── TTS progress bar ────────────────────────────────────────────── */
+    #tts-progress {
+      height: 2px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    #tts-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Playbar ─────────────────────────────────────────────────────── */
+    #playbar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex; align-items: center;
+      justify-content: center; gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .pbtn {
+      padding: 7px 22px; border-radius: 20px;
+      border: 1px solid var(--border); cursor: pointer;
+      font-size: 14px; font-weight: 500;
+      background: var(--bg); color: var(--text);
+      transition: opacity .15s;
+      -webkit-appearance: none;
+    }
+    .pbtn:disabled { opacity: .35; cursor: default; }
+    #btn-play { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    #status     { font-size: 13px; color: var(--muted); margin-left: 14px; min-width: 180px; }
+    #word-count { font-size: 12px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+    /* ── Voices modal ────────────────────────────────────────────────── */
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0;
+      box-shadow: 0 8px 40px rgba(0,0,0,.18);
+      max-width: 460px; width: 92vw;
+      color: var(--text);
+    }
+    dialog::backdrop { background: rgba(0,0,0,.35); }
+
+    .dlg-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dlg-header h2 { font-size: 16px; font-weight: 600; }
+    #btn-close-dlg {
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; color: var(--muted); line-height: 1;
+    }
+    #btn-close-dlg:hover { color: var(--text); }
+
+    .dlg-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted); margin-bottom: 8px;
+    }
+
+    /* Custom voice list */
+    #custom-voice-list { display: flex; flex-direction: column; gap: 6px; }
+    .voice-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; border-radius: 7px;
+      background: var(--bg); border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .voice-row-name { font-weight: 500; }
+    .voice-row-ref  { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+    .btn-delete {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 15px; padding: 2px 4px; border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover { color: var(--danger); }
+    #no-custom-msg { font-size: 13px; color: var(--muted); }
+
+    /* Add voice form */
+    .add-form { display: flex; flex-direction: column; gap: 10px; }
+    .add-form label { font-size: 13px; color: var(--muted); margin-bottom: 2px; display: block; }
+    .add-form input[type="text"] {
+      width: 100%; padding: 7px 10px;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 14px; background: var(--bg);
+    }
+    .add-form input[type="text"]:focus { outline: 2px solid var(--accent); }
+
+    #voice-file-label {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border: 1px dashed var(--border);
+      border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--muted);
+      background: var(--bg);
+    }
+    #voice-file-label:hover { border-color: var(--accent); color: var(--accent); }
+    #voice-file-name { font-size: 12px; color: var(--text); }
+
+    #btn-save-voice {
+      padding: 8px 18px; background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 500; align-self: flex-start;
+    }
+    #btn-save-voice:disabled { opacity: .5; cursor: default; }
+
+    #voice-add-status { font-size: 12px; color: var(--muted); min-height: 16px; }
+    .status-ok  { color: #16a34a !important; }
+    .status-err { color: var(--danger) !important; }
+
+    .hint-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<!-- ── Toolbar ──────────────────────────────────────────────────────────── -->
+<div id="toolbar">
+  <span class="brand" id="brand">ScriVocalis</span>
+
+  <select id="voice-select">
+    <optgroup label="Built-in" id="og-builtin"></optgroup>
+    <optgroup label="Custom voices" id="og-custom" style="display:none"></optgroup>
+  </select>
+
+  <div class="speed-wrap">
+    Speed <input type="range" id="rate" min="0.5" max="4" value="1" step="0.25">
+    <span id="speed-label">1×</span>
+  </div>
+
+  <button class="tbtn" id="btn-open-file">Open</button>
+  <input type="file" id="file-input" hidden accept=".docx,.md">
+
+  <button class="tbtn" id="btn-save" title="Save as Markdown (Ctrl+S)">Save .md</button>
+
+  <button class="tbtn" id="btn-dark" title="Toggle dark mode">🌙</button>
+  <button class="tbtn" id="btn-manage-voices">+ Voices</button>
+</div>
+
+<!-- ── Editor ──────────────────────────────────────────────────────────── -->
+<div id="editor-wrap">
+  <textarea id="editor" spellcheck="false"
+    placeholder="Paste text here, or open a .docx / .md file…&#10;&#10;Place your cursor anywhere and press Play."></textarea>
+</div>
+
+<!-- ── TTS progress bar ─────────────────────────────────────────────────── -->
+<div id="tts-progress"><div id="tts-progress-fill"></div></div>
+
+<!-- ── Playbar ─────────────────────────────────────────────────────────── -->
+<div id="playbar">
+  <button class="pbtn" id="btn-play">▶  Play</button>
+  <button class="pbtn" id="btn-pause" disabled>⏸  Pause</button>
+  <button class="pbtn" id="btn-stop"  disabled>⏹  Stop</button>
+  <span id="status">Ready</span>
+  <span id="word-count"></span>
+</div>
+
+<!-- ── Voices modal ─────────────────────────────────────────────────────── -->
+<dialog id="voices-dlg">
+  <div class="dlg-header">
+    <h2>Manage Voices</h2>
+    <button id="btn-close-dlg">✕</button>
+  </div>
+  <div class="dlg-body">
+
+    <!-- Saved custom voices -->
+    <div>
+      <div class="section-label">Your Custom Voices</div>
+      <div id="custom-voice-list">
+        <span id="no-custom-msg">No custom voices yet.</span>
+      </div>
+    </div>
+
+    <!-- Add a voice -->
+    <div>
+      <div class="section-label">Add a Voice</div>
+      <p class="hint-text" style="margin-bottom:10px">
+        Record <strong>10–20 seconds</strong> of clear, quiet speech — no music or background noise.
+        Only the first 15 seconds are used; longer clips produce garbled output.
+        The voice is transcribed and cloned automatically using F5-TTS (first use downloads ~750 MB).
+      </p>
+      <div class="add-form">
+        <div>
+          <label>Audio sample (WAV, MP3, M4A)</label>
+          <label id="voice-file-label" for="voice-file-input">
+            <span>📂 Choose file…</span>
+            <span id="voice-file-name"></span>
+          </label>
+          <input type="file" id="voice-file-input" hidden accept=".wav,.mp3,.m4a,.flac,.ogg">
+        </div>
+        <div>
+          <label>Voice name</label>
+          <input type="text" id="voice-name-input" placeholder="e.g. My Voice">
+        </div>
+        <button id="btn-save-voice" disabled>Save Voice</button>
+        <div id="voice-add-status"></div>
+      </div>
+    </div>
+
+  </div>
+</dialog>
+
+<script>
+// ── Refs ──────────────────────────────────────────────────────────────────────
+const brand        = document.getElementById('brand');
+const editor       = document.getElementById('editor');
+const voiceSel     = document.getElementById('voice-select');
+const ogBuiltin    = document.getElementById('og-builtin');
+const ogCustom     = document.getElementById('og-custom');
+const rateInput    = document.getElementById('rate');
+const speedLabel   = document.getElementById('speed-label');
+const btnPlay      = document.getElementById('btn-play');
+const btnPause     = document.getElementById('btn-pause');
+const btnStop      = document.getElementById('btn-stop');
+const statusEl     = document.getElementById('status');
+const wordCountEl  = document.getElementById('word-count');
+const progressFill = document.getElementById('tts-progress-fill');
+const btnOpenFile  = document.getElementById('btn-open-file');
+const fileInput    = document.getElementById('file-input');
+const btnSaveMd    = document.getElementById('btn-save');
+const btnManage    = document.getElementById('btn-manage-voices');
+const dlg          = document.getElementById('voices-dlg');
+const btnCloseDlg  = document.getElementById('btn-close-dlg');
+const customList   = document.getElementById('custom-voice-list');
+const noCustomMsg  = document.getElementById('no-custom-msg');
+const voiceFileIn  = document.getElementById('voice-file-input');
+const voiceFileName= document.getElementById('voice-file-name');
+const voiceNameIn  = document.getElementById('voice-name-input');
+const btnSaveVoice = document.getElementById('btn-save-voice');
+const voiceAddStat = document.getElementById('voice-add-status');
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let audioCtx      = null;
+let audioSource   = null;
+let isPlaying     = false;
+let isPaused      = false;
+let stopSignal    = false;
+let rafId         = null;
+let allVoices     = [];
+let playGen       = 0;   // incremented on every new Play; lets old coroutines self-abort
+let currentFilename = 'manuscript.md';
+
+// ── Persistence: restore saved content ───────────────────────────────────────
+(function restoreDraft() {
+  const saved = localStorage.getItem('vox:draft');
+  if (saved !== null) editor.value = saved;
+  const savedFile = localStorage.getItem('vox:filename');
+  if (savedFile) currentFilename = savedFile;
+  const savedSpeed = localStorage.getItem('vox:speed');
+  if (savedSpeed) {
+    rateInput.value = savedSpeed;
+    const v = parseFloat(savedSpeed);
+    speedLabel.textContent = (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2).replace(/0$/, '')) + '×';
+  }
+  updateWordCount();
+})();
+
+// ── Auto-save ─────────────────────────────────────────────────────────────────
+let saveTimer = null;
+editor.addEventListener('input', () => {
+  brand.classList.add('unsaved');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localStorage.setItem('vox:draft', editor.value);
+    brand.classList.remove('unsaved');
+  }, 500);
+  updateWordCount();
+});
+
+// ── Word count ────────────────────────────────────────────────────────────────
+function updateWordCount() {
+  const text = editor.value.trim();
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+  wordCountEl.textContent = words > 0 ? words.toLocaleString() + ' w' : '';
+}
+
+// ── Export / Save as .md ──────────────────────────────────────────────────────
+function saveMd() {
+  const blob = new Blob([editor.value], { type: 'text/markdown' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = currentFilename;
+  a.click();
+  URL.revokeObjectURL(url);
+  brand.classList.remove('unsaved');
+}
+btnSaveMd.addEventListener('click', saveMd);
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveMd(); }
+  if (e.key === 'Escape' && isPlaying) { btnStop.click(); }
+});
+
+// ── Progress bar ──────────────────────────────────────────────────────────────
+function setProgress(frac) {
+  progressFill.style.width = Math.min(1, frac) * 100 + '%';
+}
+
+// ── Voices ────────────────────────────────────────────────────────────────────
+async function loadVoices() {
+  allVoices = await fetch('/voices').then(r => r.json());
+  renderVoiceSelect();
+  renderCustomVoiceList();
+  // Restore saved voice selection
+  const savedVoice = localStorage.getItem('vox:voice');
+  if (savedVoice && [...voiceSel.options].some(o => o.value === savedVoice)) {
+    voiceSel.value = savedVoice;
+  }
+}
+
+function renderVoiceSelect() {
+  const prev = voiceSel.value;
+  ogBuiltin.innerHTML = '';
+  ogCustom.innerHTML  = '';
+
+  const builtin = allVoices.filter(v => v.type === 'builtin');
+  const custom  = allVoices.filter(v => v.type === 'custom');
+
+  builtin.forEach(v => {
+    const o = new Option(v.name, v.id);
+    ogBuiltin.append(o);
+  });
+  custom.forEach(v => {
+    const o = new Option('✦ ' + v.name, v.id);
+    ogCustom.append(o);
+  });
+
+  ogCustom.style.display = custom.length ? '' : 'none';
+
+  // Restore previous selection if still available
+  if ([...voiceSel.options].some(o => o.value === prev)) voiceSel.value = prev;
+}
+
+function renderCustomVoiceList() {
+  const custom = allVoices.filter(v => v.type === 'custom');
+  noCustomMsg.style.display = custom.length ? 'none' : '';
+  // Remove old rows
+  customList.querySelectorAll('.voice-row').forEach(el => el.remove());
+  custom.forEach(v => {
+    const name = v.id.replace('custom:', '');
+    const row  = document.createElement('div');
+    row.className = 'voice-row';
+    row.innerHTML = `
+      <div>
+        <div class="voice-row-name">✦ ${v.name}</div>
+      </div>
+      <button class="btn-delete" title="Delete voice" data-name="${name}">🗑</button>`;
+    row.querySelector('.btn-delete').addEventListener('click', () => deleteVoice(name));
+    customList.append(row);
+  });
+}
+
+async function deleteVoice(name) {
+  if (!confirm(`Delete voice "${name}"?`)) return;
+  await fetch(`/voice/${name}`, { method: 'DELETE' });
+  await loadVoices();
+}
+
+loadVoices();
+
+// ── Speed slider ──────────────────────────────────────────────────────────────
+rateInput.addEventListener('input', () => {
+  const v = parseFloat(rateInput.value);
+  speedLabel.textContent = (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2).replace(/0$/, '')) + '×';
+  localStorage.setItem('vox:speed', rateInput.value);
+});
+
+function getSpeedMult() { return parseFloat(rateInput.value); }
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+const btnDark = document.getElementById('btn-dark');
+function applyDark(on) {
+  document.body.classList.toggle('dark', on);
+  btnDark.textContent = on ? '☀️' : '🌙';
+  btnDark.title = on ? 'Switch to light mode' : 'Switch to dark mode';
+}
+applyDark(localStorage.getItem('dark') === '1');
+btnDark.addEventListener('click', () => {
+  const on = !document.body.classList.contains('dark');
+  applyDark(on);
+  localStorage.setItem('dark', on ? '1' : '0');
+});
+
+// ── File open ─────────────────────────────────────────────────────────────────
+btnOpenFile.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  setStatus('Parsing…');
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res  = await fetch('/parse', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.error) { setStatus('Error: ' + data.error); return; }
+    editor.value = data.text;
+    editor.setSelectionRange(0, 0);
+    // Track filename and persist
+    currentFilename = file.name.replace(/\.docx$/i, '.md');
+    localStorage.setItem('vox:filename', currentFilename);
+    localStorage.setItem('vox:draft', data.text);
+    brand.classList.remove('unsaved');
+    updateWordCount();
+    setStatus('Loaded: ' + file.name);
+    btnPlay.click();   // auto-play from the top
+  } catch (e) { setStatus('Parse error: ' + e.message); }
+  fileInput.value = '';
+});
+
+// ── Voice selection persistence ───────────────────────────────────────────────
+voiceSel.addEventListener('change', async () => {
+  localStorage.setItem('vox:voice', voiceSel.value);
+  if (!isPlaying) return;
+  stopSignal = true;
+  if (audioSource) try { audioSource.stop(); } catch (_) {}
+  await sleep(120);
+  btnPlay.click();
+});
+
+// ── Voices modal ──────────────────────────────────────────────────────────────
+btnManage.addEventListener('click', () => dlg.showModal());
+btnCloseDlg.addEventListener('click', () => dlg.close());
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+
+voiceFileIn.addEventListener('change', () => {
+  const f = voiceFileIn.files[0];
+  voiceFileName.textContent = f ? f.name : '';
+  btnSaveVoice.disabled = !(f && voiceNameIn.value.trim());
+});
+voiceNameIn.addEventListener('input', () => {
+  btnSaveVoice.disabled = !(voiceFileIn.files[0] && voiceNameIn.value.trim());
+});
+
+btnSaveVoice.addEventListener('click', async () => {
+  const file = voiceFileIn.files[0];
+  const name = voiceNameIn.value.trim();
+  if (!file || !name) return;
+
+  btnSaveVoice.disabled = true;
+  voiceAddStat.textContent = 'Uploading and transcribing… (this may take 30–60 s on first use)';
+  voiceAddStat.className = '';
+
+  const form = new FormData();
+  form.append('file', file);
+  form.append('name', name);
+
+  try {
+    const res  = await fetch('/voice/add', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    voiceAddStat.textContent = `✓ "${name}" saved. Select it from the voice dropdown.`;
+    voiceAddStat.className = 'status-ok';
+    voiceFileIn.value   = '';
+    voiceFileName.textContent = '';
+    voiceNameIn.value   = '';
+    await loadVoices();
+    // Auto-select the new voice
+    voiceSel.value = data.id;
+    localStorage.setItem('vox:voice', data.id);
+  } catch (e) {
+    voiceAddStat.textContent = 'Error: ' + e.message;
+    voiceAddStat.className = 'status-err';
+    btnSaveVoice.disabled = false;
+  }
+});
+
+// ── Text unit helpers (sentence-level for fast TTS response) ──────────────────
+
+// Splits a paragraph into sentences, protecting common abbreviations.
+function splitSentences(para) {
+  // Replace dots in abbreviations with placeholder so they don't split
+  let s = para.replace(
+    /\b(et\s+al|fig|figs|eq|eqs|ref|refs|sec|tab|vs|dr|prof|mr|mrs|ms|sr|jr|no|vol|pp|approx|dept|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec|i\.e|e\.g|etc|al)\./gi,
+    m => m.slice(0, -1) + '\uFFFD'
+  );
+  // Protect decimal numbers like 3.14 or p < 0.05
+  s = s.replace(/(\d)\.(\d)/g, '$1\uFFFE$2');
+
+  // Split on sentence-ending punctuation followed by whitespace + capital/quote/paren
+  const parts = s.split(/(?<=[.!?])\s+(?=[A-Z"'(\[])/);
+
+  return parts
+    .map(p => p.replace(/\uFFFD/g, '.').replace(/\uFFFE/g, '.').trim())
+    .filter(p => p.length > 4);
+}
+
+// Splits the full textarea text into sentence units with their char positions.
+function parseUnits(text) {
+  const result = [];
+  let searchFrom = 0;
+  for (const rawPara of text.split(/\n{2,}/)) {
+    const para = rawPara.trim();
+    if (!para) { searchFrom += rawPara.length + 2; continue; }
+    const paraStart = text.indexOf(para, searchFrom);
+    if (paraStart < 0) continue;
+    searchFrom = paraStart + para.length;
+
+    const sentences = splitSentences(para);
+    let offset = 0;
+    for (const sent of sentences) {
+      const idx = para.indexOf(sent, offset);
+      if (idx >= 0) {
+        result.push({ text: sent, start: paraStart + idx });
+        offset = idx + sent.length;
+      }
+    }
+  }
+  return result.length ? result : [{ text: text.trim(), start: 0 }];
+}
+
+function findStartUnit(units, cursorPos) {
+  let idx = 0;
+  for (let i = units.length - 1; i >= 0; i--) {
+    if (units[i].start <= cursorPos) { idx = i; break; }
+  }
+  return idx;
+}
+
+// ── Audio helpers ─────────────────────────────────────────────────────────────
+async function ensureCtx() {
+  if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+}
+
+async function fetchTTS(text, voice) {
+  const res = await fetch('/tts', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ text, voice, rate: '+0%' }),
+  });
+  if (!res.ok) throw new Error(`TTS failed (${res.status})`);
+  return res.json();
+}
+
+async function decodeAudio(b64) {
+  const raw = atob(b64), bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return audioCtx.decodeAudioData(bytes.buffer);
+}
+
+// ── Word / paragraph highlighting ─────────────────────────────────────────────
+function startHighlights(words, paraText, paraStart, audioStartTime, speedMult) {
+  if (rafId) cancelAnimationFrame(rafId);
+
+  if (words.length === 0) {
+    // Custom voice: highlight whole sentence
+    editor.focus();
+    editor.setSelectionRange(paraStart, paraStart + paraText.length);
+    scrollToChar(paraStart);
+    return;
+  }
+
+  // Word-by-word via RAF — offsets divided by speedMult since audio plays faster
+  const positions = [];
+  let sf = 0;
+  for (const w of words) {
+    const idx = paraText.indexOf(w.word, sf);
+    if (idx >= 0) {
+      positions.push({ start: paraStart + idx, end: paraStart + idx + w.word.length, offset: w.offset / speedMult });
+      sf = idx + 1;
+    }
+  }
+
+  let wi = 0;
+  function frame() {
+    if (!isPlaying || stopSignal) return;
+    const elapsed = audioCtx.currentTime - audioStartTime;
+    while (wi < positions.length && positions[wi].offset <= elapsed) {
+      const p = positions[wi];
+      editor.focus();
+      editor.setSelectionRange(p.start, p.end);
+      scrollToChar(p.start);
+      wi++;
+    }
+    if (wi < positions.length) rafId = requestAnimationFrame(frame);
+  }
+  rafId = requestAnimationFrame(frame);
+}
+
+function scrollToChar(charPos) {
+  const before = editor.value.substring(0, charPos);
+  const lines  = (before.match(/\n/g) || []).length;
+  const lineH  = parseFloat(getComputedStyle(editor).lineHeight) || 30;
+  editor.scrollTop = Math.max(0, lines * lineH - editor.clientHeight * 0.45);
+}
+
+// ── Playback loop ─────────────────────────────────────────────────────────────
+function activeVoiceName() {
+  const opt = voiceSel.selectedOptions[0];
+  return opt ? opt.text.replace('✦ ', '') : voiceSel.value;
+}
+
+async function playFrom(paras, startIdx) {
+  const myGen = ++playGen;
+  const stale = () => myGen !== playGen || stopSignal;
+
+  let currentFetch = fetchTTS(paras[startIdx].text, voiceSel.value);
+
+  for (let i = startIdx; i < paras.length; i++) {
+    if (stale()) break;
+
+    const voice    = voiceSel.value;
+    const isCustom = voice.startsWith('custom:');
+
+    setProgress(i / paras.length);
+    setStatus(isCustom
+      ? `[${activeVoiceName()}]  Sentence ${i + 1}/${paras.length} — generating… (may take ~15 s)`
+      : `[${activeVoiceName()}]  Sentence ${i + 1}/${paras.length}`);
+
+    let data;
+    try { data = await currentFetch; }
+    catch (e) { if (!stale()) setStatus('Error: ' + e.message); break; }
+    if (stale()) break;
+
+    const buffer = await decodeAudio(data.audio);
+    if (stale()) break;
+
+    while (isPaused && !stale()) await sleep(80);
+    if (stale()) break;
+
+    await ensureCtx();
+    if (stale()) break;
+
+    const speedMult = getSpeedMult();
+
+    // Kick off next sentence fetch as soon as current starts playing so GPU/network
+    // generation overlaps with playback — reduces the gap between sentences.
+    currentFetch = (i + 1 < paras.length && !stale())
+      ? fetchTTS(paras[i + 1].text, voiceSel.value)
+      : null;
+
+    await new Promise(resolve => {
+      audioSource = audioCtx.createBufferSource();
+      audioSource.buffer = buffer;
+      audioSource.connect(audioCtx.destination);
+      audioSource.playbackRate.value = speedMult;
+      audioSource.onended = resolve;
+      startHighlights(data.words, paras[i].text, paras[i].start, audioCtx.currentTime, speedMult);
+      audioSource.start();
+    });
+  }
+
+  // Only the current generation should call cleanup — not a superseded instance
+  if (myGen === playGen) cleanup();
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function setStatus(msg) { statusEl.textContent = msg; }
+function setControls(on) {
+  btnPlay.disabled  = on;
+  btnPause.disabled = !on;
+  btnStop.disabled  = !on;
+}
+function cleanup() {
+  isPlaying = isPaused = stopSignal = false;
+  if (rafId)       { cancelAnimationFrame(rafId); rafId = null; }
+  if (audioSource) { try { audioSource.stop(); } catch (_) {} audioSource = null; }
+  setControls(false);
+  btnPause.textContent = '⏸  Pause';
+  setProgress(0);
+  setStatus('Stopped');
+}
+
+// ── Button handlers ───────────────────────────────────────────────────────────
+btnPlay.addEventListener('click', async () => {
+  const text = editor.value;
+  if (!text.trim()) { setStatus('No text to read.'); return; }
+
+  // Stop any running instance — playGen increment inside playFrom will signal it stale
+  stopSignal = true;
+  if (audioSource) try { audioSource.stop(); } catch (_) {}
+  await sleep(50);   // let onended fire so the old AudioBufferSource is released
+
+  await ensureCtx();
+  const paras    = parseUnits(text);
+  const startIdx = findStartUnit(paras, editor.selectionStart);
+
+  stopSignal = false; isPlaying = true; isPaused = false;
+  setControls(true);
+  playFrom(paras, startIdx);
+});
+
+btnPause.addEventListener('click', async () => {
+  if (!isPlaying) return;
+  if (!isPaused) {
+    isPaused = true;
+    if (audioCtx) await audioCtx.suspend();
+    btnPause.textContent = '▶  Resume';
+    setStatus('Paused');
+  } else {
+    isPaused = false;
+    if (audioCtx) await audioCtx.resume();
+    btnPause.textContent = '⏸  Pause';
+    setStatus('Playing…');
+  }
+});
+
+btnStop.addEventListener('click', () => {
+  stopSignal = true;
+  if (audioSource) try { audioSource.stop(); } catch (_) {}
+  cleanup();
+});
+</script>
+</body>
+</html>

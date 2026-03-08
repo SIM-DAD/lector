@@ -1,0 +1,18 @@
+# PyTorch 2.6.0 + CUDA 12.4 is installed by launch.bat before this file:
+#   pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+
+# Core
+edge-tts>=6.1.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+python-docx>=1.1.0
+markdown>=3.6
+beautifulsoup4>=4.12.0
+numpy>=1.26.0
+soundfile>=0.12.1
+
+# Voice cloning (F5-TTS) + auto-transcription (Whisper)
+f5-tts>=0.3.0
+faster-whisper>=1.0.0
+imageio-ffmpeg>=0.4.9

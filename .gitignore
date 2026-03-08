@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyd
+*.egg-info/
+build/
+dist/
+
+# App data (user-specific, not committed)
+voices/*.wav
+voices/*.ref.txt
+audio_cache/*.wav
+audio_cache/*.mp3
+launch_log.txt
+*.log
+
+# Environment
+.env
+
+# IDE / tooling
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
