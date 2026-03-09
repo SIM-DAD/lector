@@ -2,7 +2,7 @@
 
 > Distraction-free manuscript editor with read-aloud and voice cloning.
 
-**[sim-dad.github.io/scrivocalis](https://sim-dad.github.io/scrivocalis/)** · [SIM DAD LLC](https://github.com/sim-dad)
+**[sim-dad.github.io/scrivocalis](https://sim-dad.github.io/scrivocalis/)** · [SIM DAD LLC](https://github.com/sim-dad) · [☕ Buy me a coffee](https://ko-fi.com/simdadllc)
 
 ScriVocalis is a local web app for researchers and writers who want to edit Markdown manuscripts and hear them read back — in any voice, including a clone of their own.
 
@@ -99,3 +99,5 @@ launch.sh            Linux / macOS setup and launch
 ## License
 
 Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE) — free for personal and noncommercial use. Voluntary tips to the author are welcome and explicitly permitted. Commercial use requires written permission from SIM DAD LLC.
+
+If ScriVocalis is useful to you, consider [buying me a coffee](https://ko-fi.com/simdadllc). ☕
