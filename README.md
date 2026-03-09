@@ -46,11 +46,9 @@ The first run creates a virtual environment and installs all dependencies (~3 GB
 
 **Windows:**
 ```bat
-py -3.12 -m venv .venv
-.venv\Scripts\activate
-pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
-pip install -r requirements.txt
-.venv\Scripts\python.exe server.py
+:: launch.bat stores the venv in %LOCALAPPDATA%\ScriVocalis\.venv to keep
+:: the ~3 GB of packages off cloud sync. Double-click launch.bat to run.
+launch.bat
 ```
 
 **Linux / macOS:**
@@ -100,4 +98,4 @@ launch.sh            Linux / macOS setup and launch
 
 ## License
 
-Free for personal and educational use. Commercial use requires written permission from the author. See [LICENSE](LICENSE) for the full terms.
+Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE) — free for personal and noncommercial use. Voluntary tips to the author are welcome and explicitly permitted. Commercial use requires written permission from SIM DAD LLC.

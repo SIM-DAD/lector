@@ -1,26 +1,114 @@
-ScriVocalis License
-Copyright (c) 2025 SIM DAD LLC
+PolyForm Noncommercial License 1.0.0
 
-Permission is granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software") to use,
-copy, modify, and distribute the Software for personal or educational
-purposes, subject to the following conditions:
+Copyright (c) 2026 SIM DAD LLC
 
-1. The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+Required Notice: Copyright SIM DAD LLC (https://github.com/SIM-DAD)
 
-2. Commercial use — including but not limited to integration into a product
-   or service offered for sale, use in a revenue-generating workflow, or
-   redistribution as part of a commercial offering — is prohibited without
-   explicit prior written permission from the copyright holder.
+https://polyformproject.org/licenses/noncommercial/1.0.0
 
-To request a commercial license, open an issue on the GitHub repository
-or contact SIM DAD LLC directly.
+## Acceptance
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+In order to get any license under these terms, you must agree to them as
+both strict obligations and conditions to all your licenses.
+
+## Copyright License
+
+The licensor grants you a copyright license for the software to do
+everything you might do with the software that would otherwise infringe
+the licensor's copyright in it for any permitted purpose. However, you
+may only distribute the software according to the Distribution License
+below and make changes or new works based on the software according to
+the Changes and New Works License below.
+
+## Distribution License
+
+The licensor grants you an additional copyright license to distribute
+copies of the software. Your license to distribute covers distributing
+the software with changes and new works permitted by the Changes and New
+Works License.
+
+## Notices
+
+You must ensure that anyone who gets a copy of any part of the software
+from you also gets a copy of these terms or the URL for them above, as
+well as copies of any plain-text lines beginning with "Required Notice:"
+that the licensor provided with the software.
+
+## Changes and New Works License
+
+The licensor grants you an additional copyright license to make changes
+and new works based on the software for any permitted purpose.
+
+## Patent License
+
+The licensor grants you a patent license for the software that covers
+patent claims the licensor can license, or will be able to license, that
+you would infringe by using the software.
+
+## Permitted Purposes
+
+Any purpose is a permitted purpose except for Commercial Purposes.
+
+## Commercial Purposes
+
+Providing others with a software as a service, using the software to
+provide services to others for a fee, or selling the software in any form
+are commercial purposes.
+
+Voluntary donations or tips made to the original author (SIM DAD LLC) in
+appreciation of the software are not commercial purposes.
+
+## Acceptance and Termination
+
+If you use the software in any way that is not permitted by these terms,
+your licenses automatically terminate, and you must stop using the
+software.
+
+## No Other Rights
+
+These terms do not allow you to sublicense or transfer any of your
+licenses to anyone else, or prevent the licensor from granting licenses
+to anyone else. These terms do not imply any other licenses.
+
+## Patent Defense
+
+If you make any written claim that the software infringes or contributes
+to infringement of any patent, your patent license for the software
+granted under these terms ends immediately. If your employer makes such a
+claim, your patent license ends immediately for work on behalf of your
+employer.
+
+## Violations
+
+The first time you are notified in writing that you have violated any of
+these terms, or done anything with the software not covered by your
+licenses, you have 30 days to come into compliance. If you do not do so
+within that period, your licenses end permanently.
+
+## No Liability
+
+As far as the law allows, the software comes as is, without any warranty
+or condition, and the licensor will not be liable to you for any damages
+arising out of these terms or the use or nature of the software, under
+any kind of legal claim.
+
+## Definitions
+
+The "licensor" is SIM DAD LLC, the entity offering these terms, and the
+"software" is ScriVocalis, the software the licensor makes available
+under these terms.
+
+"You" refers to the individual or entity agreeing to these terms.
+
+"Your company" is any legal entity, sole proprietorship, or other kind
+of organization that you work for, plus all organizations that have
+control over, are under the control of, or are under common control with
+that organization. "Control" means ownership of substantially all the
+assets of an entity, or the power to direct its management and legal
+affairs.
+
+"Your licenses" are all the licenses granted to you for the software
+under these terms.
+
+"Use" means anything you do with the software requiring one of your
+licenses.

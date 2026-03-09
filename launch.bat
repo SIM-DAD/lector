@@ -6,8 +6,13 @@ set LOG=%~dp0launch_log.txt
 echo [%date% %time%] Launch started > "%LOG%"
 echo Working dir: %CD% >> "%LOG%"
 
+:: ── Keep .venv on a local drive to avoid syncing 3 GB to Google Drive ─────────
+:: Store in %LOCALAPPDATA%\ScriVocalis\.venv so it survives project moves.
+set VENV=%LOCALAPPDATA%\ScriVocalis\.venv
+echo Venv: %VENV% >> "%LOG%"
+
 :: ── Is the venv ready? ────────────────────────────────────────────────────────
-if exist ".venv\Scripts\python.exe" (
+if exist "%VENV%\Scripts\python.exe" (
     echo [OK] venv found, skipping setup >> "%LOG%"
     goto :activate
 )
@@ -16,7 +21,7 @@ if exist ".venv\Scripts\python.exe" (
 echo [SETUP] venv not found, running first-time setup >> "%LOG%"
 
 echo [1/4] Creating virtual environment (Python 3.12)...
-py -3.12 -m venv .venv >> "%LOG%" 2>&1
+py -3.12 -m venv "%VENV%" >> "%LOG%" 2>&1
 if errorlevel 1 (
     echo ERROR: py -3.12 failed >> "%LOG%"
     echo.
@@ -26,7 +31,7 @@ if errorlevel 1 (
 )
 echo [1/4] venv created >> "%LOG%"
 
-call .venv\Scripts\activate.bat
+call "%VENV%\Scripts\activate.bat"
 
 echo [2/4] Installing PyTorch 2.6.0 + CUDA 12.4  (downloading ~2.5 GB, please wait)...
 pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124 >> "%LOG%" 2>&1
@@ -50,10 +55,10 @@ goto :launch
 
 :: ── Activate existing venv ────────────────────────────────────────────────────
 :activate
-call .venv\Scripts\activate.bat
+call "%VENV%\Scripts\activate.bat"
 if errorlevel 1 (
     echo ERROR: activate failed >> "%LOG%"
-    echo ERROR: Could not activate venv. Delete the .venv folder and rerun.
+    echo ERROR: Could not activate venv. Delete "%VENV%" and rerun.
     goto :fail
 )
 echo [OK] venv activated >> "%LOG%"
@@ -65,7 +70,7 @@ echo Starting server at http://127.0.0.1:7860
 echo Log: %LOG%
 echo.
 
-.venv\Scripts\python.exe server.py >> "%LOG%" 2>&1
+"%VENV%\Scripts\python.exe" server.py >> "%LOG%" 2>&1
 set ERR=%errorlevel%
 echo [%date% %time%] Server exited, code %ERR% >> "%LOG%"
 
