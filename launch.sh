@@ -1,5 +1,5 @@
 #!/bin/bash
-# ScriVocalis — Linux / macOS launcher
+# Lector — Linux / macOS launcher
 # Usage: bash launch.sh
 set -e
 cd "$(dirname "$0")"
@@ -57,7 +57,7 @@ else
 fi
 
 # ── Launch ────────────────────────────────────────────────────────────────────
-echo "Starting ScriVocalis at http://127.0.0.1:7860"
+echo "Starting Lector at http://127.0.0.1:7860"
 echo "Log: $LOG"
 echo ""
 python server.py 2>&1 | tee -a "$LOG"
