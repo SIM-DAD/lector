@@ -25,6 +25,16 @@ pip_err.txt
 # IDE / tooling
 .claude/
 
+# Video sub-project (Remotion / Node.js)
+video/node_modules/
+video/out/
+video/frames/
+video/.next/
+video/dist/
+*.mp4
+*.mov
+*.webm
+
 # OS
 .DS_Store
 Thumbs.db
