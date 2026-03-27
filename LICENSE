@@ -1,26 +1,17 @@
-Lector License
-Copyright (c) 2025 SIM DAD LLC
+Lector — Proprietary Software License
+Copyright (c) 2026 SIM DAD LLC. All rights reserved.
 
-Permission is granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software") to use,
-copy, modify, and distribute the Software for personal or educational
-purposes, subject to the following conditions:
+This software and its source code are the proprietary and confidential
+property of SIM DAD LLC. Use of this software is governed by the SIM DAD
+LLC End User License Agreement (EULA) available at:
 
-1. The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+    https://uselector.app/eula
 
-2. Commercial use — including but not limited to integration into a product
-   or service offered for sale, use in a revenue-generating workflow, or
-   redistribution as part of a commercial offering — is prohibited without
-   explicit prior written permission from the copyright holder.
+You may not copy, modify, distribute, sublicense, sell, or reverse engineer
+this software except as expressly permitted by the EULA or by applicable law.
 
-To request a commercial license, open an issue on the GitHub repository
-or contact SIM DAD LLC directly.
+This software incorporates open source components under their respective
+licenses. See the product attribution page at https://uselector.app for
+a full list.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+For licensing inquiries: hello@simdadllc.com

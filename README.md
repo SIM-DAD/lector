@@ -2,7 +2,7 @@
 
 > Distraction-free manuscript editor with read-aloud and voice cloning.
 
-**[sim-dad.github.io/scrivocalis](https://sim-dad.github.io/lector/)** · [SIM DAD LLC](https://github.com/sim-dad)
+**[uselector.app](https://uselector.app)** · [SIM DAD LLC](https://simdadllc.com)
 
 Lector is a local web app for researchers and writers who want to edit Markdown manuscripts and hear them read back — in any voice, including a clone of their own.
 
@@ -12,7 +12,7 @@ Lector is a local web app for researchers and writers who want to edit Markdown 
 
 - **Markdown editor** — clean, distraction-free writing surface with word-by-word TTS highlighting
 - **Read aloud** — sentence-level streaming TTS so playback starts immediately
-- **Voice cloning** — clone any voice from a 10–20 s audio sample using [F5-TTS](https://github.com/SWivid/F5-TTS) (no training required)
+- **Voice cloning** — clone any voice from a short audio sample using [XTTS-v2](https://github.com/coqui-ai/TTS) (no training required)
 - **Built-in voices** — 10 Edge TTS neural voices (US, UK, AU); no GPU needed
 - **Citation stripping** — numeric `[1]` and author–year `[Smith et al., 2020]` references are removed before reading
 - **Auto-save** — draft persists in the browser between sessions; export as `.md` any time
@@ -38,7 +38,7 @@ Lector is a local web app for researchers and writers who want to edit Markdown 
 | Windows (no console) | Double-click **`launch-silent.vbs`** |
 | Linux / macOS | `bash launch.sh` |
 
-The first run creates a virtual environment and installs all dependencies (~3 GB including PyTorch and F5-TTS). Subsequent launches take a few seconds. The browser opens automatically to `http://127.0.0.1:7860`.
+The first run creates a virtual environment and installs all dependencies (~3 GB including PyTorch and XTTS-v2). Subsequent launches take a few seconds. The browser opens automatically to `http://127.0.0.1:7860`.
 
 > **macOS / Linux without NVIDIA GPU:** Built-in Edge TTS voices work normally. Voice cloning requires an NVIDIA GPU with CUDA 12.4.
 
@@ -90,7 +90,7 @@ static/
   index.html         Single-page frontend (vanilla JS, no framework)
 voices/              Custom voice reference audio — gitignored, created at runtime
 audio_cache/         Generated audio cache — gitignored, created at runtime
-pkuseg_stub/         Local stub required by F5-TTS
+pkuseg_stub/         Local stub required by XTTS-v2
 launch.bat           One-click Windows setup and launch
 launch-silent.vbs    Windows launch without a visible console window
 launch.sh            Linux / macOS setup and launch
@@ -100,4 +100,4 @@ launch.sh            Linux / macOS setup and launch
 
 ## License
 
-Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE) — free for personal and noncommercial use. Voluntary tips to the author are welcome and explicitly permitted. Commercial use requires written permission from SIM DAD LLC.
+Lector is a commercial product. Use is governed by the [SIM DAD LLC End User License Agreement](LICENSE). All rights reserved.
