@@ -12,7 +12,7 @@ beautifulsoup4>=4.12.0
 numpy>=1.26.0
 soundfile>=0.12.1
 
-# Voice cloning (F5-TTS) + auto-transcription (Whisper)
-f5-tts>=0.3.0
+# Voice cloning (XTTS-v2 via Coqui TTS) + auto-transcription (Whisper)
+coqui-tts>=0.25.0
 faster-whisper>=1.0.0
 imageio-ffmpeg>=0.4.9
