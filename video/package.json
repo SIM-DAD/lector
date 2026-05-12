@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "npx remotion studio",
-    "build": "npx remotion render LectorDemo out/lector-demo.mp4 --codec=h264"
+    "build": "npx remotion render LectorDemo out/lector-demo.mp4 --codec=h264",
+    "build:short01": "npx remotion render LectorShort01 out/lector-short-01.mp4 --codec=h264"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",

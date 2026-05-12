@@ -24,6 +24,15 @@ export const W            = 1280;
 export const H            = 720;
 export const TOTAL_FRAMES = 720; // 24 s
 
+// ── Vertical (9:16) — TikTok / YouTube Shorts ──────────────────────────────
+export const V = {
+  w:    1080,
+  h:    1920,
+  safeTop:    180,
+  safeBottom: 280,
+  safeSide:    48,
+} as const;
+
 // Absolute sequence timing
 export const SEQ = {
   intro:    { from: 0,   duration: 90  }, // 0 – 3 s
