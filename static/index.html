@@ -3,235 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScriVocalis</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:      #f7f6f3;
-      --surface: #ffffff;
-      --border:  #e0ddd8;
-      --text:    #1a1a18;
-      --muted:   #8a8a8a;
-      --accent:  #2563eb;
-      --danger:  #dc2626;
-      --mark:    #fde047;
-    }
-
-    body.dark {
-      --bg:      #1c1c1e;
-      --surface: #2c2c2e;
-      --border:  #3a3a3c;
-      --text:    #f2f2f7;
-      --muted:   #8e8e93;
-      --accent:  #3b82f6;
-      --mark:    #78350f;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      color: var(--text);
-      overflow: hidden;
-    }
-
-    /* ── Toolbar ─────────────────────────────────────────────────────── */
-    #toolbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-      flex-wrap: wrap;
-    }
-
-    .brand {
-      font-weight: 700; font-size: 15px; color: var(--accent); margin-right: 4px;
-      cursor: default; user-select: none;
-    }
-    /* Unsaved indicator dot */
-    .brand.unsaved::after { content: ' ·'; font-size: 18px; line-height: 0; vertical-align: -2px; }
-
-    #voice-select {
-      padding: 5px 8px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg);
-      font-size: 13px;
-      min-width: 175px;
-      cursor: pointer;
-    }
-
-    .speed-wrap {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 13px; color: var(--muted);
-    }
-    #rate { width: 88px; accent-color: var(--accent); }
-    #speed-label { min-width: 30px; color: var(--text); font-variant-numeric: tabular-nums; }
-
-    .tbtn {
-      padding: 5px 11px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg);
-      color: var(--text);
-      cursor: pointer;
-      font-size: 13px;
-      white-space: nowrap;
-      -webkit-appearance: none;
-    }
-    .tbtn:hover { background: var(--border); }
-    #btn-manage-voices { margin-left: auto; }
-    #btn-dark { font-size: 15px; padding: 5px 9px; }
-
-    /* ── Editor ──────────────────────────────────────────────────────── */
-    #editor-wrap {
-      flex: 1; overflow: hidden;
-      display: flex; justify-content: center;
-      padding: 0 20px; background: var(--bg);
-    }
-
-    #editor {
-      width: 100%; max-width: 780px; height: 100%;
-      resize: none; border: none; outline: none;
-      background: transparent;
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 17px; line-height: 1.9;
-      color: var(--text); padding: 28px 0;
-      caret-color: var(--accent);
-    }
-    #editor::selection { background: var(--mark); color: var(--text); }
-
-    /* ── TTS progress bar ────────────────────────────────────────────── */
-    #tts-progress {
-      height: 2px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-    #tts-progress-fill {
-      height: 100%;
-      background: var(--accent);
-      width: 0%;
-      transition: width 0.4s ease;
-    }
-
-    /* ── Playbar ─────────────────────────────────────────────────────── */
-    #playbar {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 10px 24px;
-      display: flex; align-items: center;
-      justify-content: center; gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .pbtn {
-      padding: 7px 22px; border-radius: 20px;
-      border: 1px solid var(--border); cursor: pointer;
-      font-size: 14px; font-weight: 500;
-      background: var(--bg); color: var(--text);
-      transition: opacity .15s;
-      -webkit-appearance: none;
-    }
-    .pbtn:disabled { opacity: .35; cursor: default; }
-    #btn-play { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-    #status     { font-size: 13px; color: var(--muted); margin-left: 14px; min-width: 180px; }
-    #word-count { font-size: 12px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
-    #kofi-link { font-size: 11px; color: var(--muted); text-decoration: none; white-space: nowrap; }
-    #kofi-link:hover { color: var(--accent); }
-
-    /* ── Voices modal ────────────────────────────────────────────────── */
-    dialog {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0;
-      box-shadow: 0 8px 40px rgba(0,0,0,.18);
-      max-width: 460px; width: 92vw;
-      color: var(--text);
-    }
-    dialog::backdrop { background: rgba(0,0,0,.35); }
-
-    .dlg-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .dlg-header h2 { font-size: 16px; font-weight: 600; }
-    #btn-close-dlg {
-      background: none; border: none; cursor: pointer;
-      font-size: 18px; color: var(--muted); line-height: 1;
-    }
-    #btn-close-dlg:hover { color: var(--text); }
-
-    .dlg-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 20px; }
-
-    .section-label {
-      font-size: 11px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .06em; color: var(--muted); margin-bottom: 8px;
-    }
-
-    /* Custom voice list */
-    #custom-voice-list { display: flex; flex-direction: column; gap: 6px; }
-    .voice-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 12px; border-radius: 7px;
-      background: var(--bg); border: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .voice-row-name { font-weight: 500; }
-    .voice-row-ref  { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
-    .btn-delete {
-      background: none; border: none; cursor: pointer;
-      color: var(--muted); font-size: 15px; padding: 2px 4px; border-radius: 4px;
-      flex-shrink: 0;
-    }
-    .btn-delete:hover { color: var(--danger); }
-    #no-custom-msg { font-size: 13px; color: var(--muted); }
-
-    /* Add voice form */
-    .add-form { display: flex; flex-direction: column; gap: 10px; }
-    .add-form label { font-size: 13px; color: var(--muted); margin-bottom: 2px; display: block; }
-    .add-form input[type="text"] {
-      width: 100%; padding: 7px 10px;
-      border: 1px solid var(--border); border-radius: 6px;
-      font-size: 14px; background: var(--bg);
-    }
-    .add-form input[type="text"]:focus { outline: 2px solid var(--accent); }
-
-    #voice-file-label {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border: 1px dashed var(--border);
-      border-radius: 7px; cursor: pointer; font-size: 13px; color: var(--muted);
-      background: var(--bg);
-    }
-    #voice-file-label:hover { border-color: var(--accent); color: var(--accent); }
-    #voice-file-name { font-size: 12px; color: var(--text); }
-
-    #btn-save-voice {
-      padding: 8px 18px; background: var(--accent); color: #fff;
-      border: none; border-radius: 8px; cursor: pointer;
-      font-size: 14px; font-weight: 500; align-self: flex-start;
-    }
-    #btn-save-voice:disabled { opacity: .5; cursor: default; }
-
-    #voice-add-status { font-size: 12px; color: var(--muted); min-height: 16px; }
-    .status-ok  { color: #16a34a !important; }
-    .status-err { color: var(--danger) !important; }
-
-    .hint-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
-  </style>
+  <title>Lector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="mode-edit">
+
+<!-- ── Engine warm-up splash ──────────────────────────────────────────────
+     Shown immediately on page load. Polls /status until the speech engines
+     are ready. Hides after Kokoro (and F5 if any custom voices exist) loads.
+     This is the front-loaded wait pattern: customers see one calm boot
+     sequence rather than surprise delays when picking voices later.
+  -->
+<div id="warmup-overlay" style="position:fixed; inset:0; z-index:9998;
+  background:rgba(0,0,0,.92); display:flex; align-items:center;
+  justify-content:center; color:#eee; font-family:var(--font-ui, system-ui);">
+  <div style="background:var(--bg, #1a1a1a); border:1px solid var(--border, #333);
+    border-radius:16px; padding:36px 44px; max-width:480px; width:90%;
+    text-align:center;">
+    <div style="font-size:28px; font-weight:700; letter-spacing:.5px; margin-bottom:6px;">
+      Lector
+    </div>
+    <p id="warmup-stage" style="margin:18px 0 14px; font-size:14px;
+      color:var(--muted, #999); min-height:40px;">
+      Starting up...
+    </p>
+    <div style="height:6px; background:var(--surface, #2a2a2a); border-radius:3px;
+      overflow:hidden; margin:0 auto; width:100%;">
+      <div id="warmup-bar" style="height:100%; width:0%;
+        background:var(--accent, #5C4B8A);
+        transition:width .6s ease-out;
+        box-shadow:0 0 12px var(--accent, #5C4B8A);"></div>
+    </div>
+    <p id="warmup-detail" style="margin:18px 0 0; font-size:11px;
+      color:var(--muted, #777); line-height:1.5;">
+      First launch loads the speech engines into memory.
+      This happens once per session.
+    </p>
+    <button id="warmup-continue" style="display:none; margin-top:18px;
+      padding:8px 22px; font-size:12px; font-weight:600; border:1px solid var(--border, #444);
+      border-radius:8px; background:var(--surface, #2a2a2a); color:#eee; cursor:pointer;
+      font-family:inherit;">
+      Continue with built-in voices only
+    </button>
+  </div>
+</div>
+
+<!-- ── License overlay ─────────────────────────────────────────────────── -->
+<div id="license-overlay" style="display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,.85); align-items:center; justify-content:center;">
+  <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px;
+    padding:40px 36px; max-width:440px; width:90%; text-align:center; font-family:var(--font-ui);">
+    <div style="margin-bottom:6px; color:var(--accent); height:32px; display:flex; justify-content:center;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1174.66 200.9" style="height:32px;" fill="currentColor">
+        <g><path d="M992.05,0c2.71,5.11,11.07,5.04,15.34,6.97,10.09,4.56,20.55,9.34,30.67,13.94,1.66.75,3.44,1.83,5.58,2.79,9.17,4.13,17.89,10.32,27.88,12.55-.04,1.39.05,2.79,0,4.18-.29,8.59-.12,27.15-1.43,34.12-.9,4.81-7.8,6.01-6.94,11.88-1.35.1-5.06,1.95-5.57,1.39-.2-10.2.24-20.47,0-30.66-.08-3.19.3-6.66,0-9.76-.1-1.06.59-2.29-.86-2.9-4.85-2.55-11.17-4.46-15.86-6.86-9.29-4.75-16.95-8.31-26.49-12.55-2.01-.89-14.33-8.07-15.33-6.96-.07,9.74.07,19.53,0,29.27-.08,10.2-.05,20.47,0,30.67.09,16.86-1.14,34.62,1.29,50.99,1.47,1.76,4.01,2.23,5.68,3.38,1.49,1.03,2.13,1.99,4.18,2.79.42,1.61,1.75,1.96,2.79,2.79,8.15,6.5,16.93,11.93,25.09,18.12.89.67,1.8,3.49,3.48,4.14l16.03,11.19v-46.7c0-.96,11.91-11.68,13.94-13.24.49,6.67-.06,14.11,0,20.91.06,6.48.05,13.03,0,19.52-.13,16.74-1.41,33.55-1.39,50.19-20.53-8.71-42.09-15.37-62.73-23.7-9.48-3.82-20.23-7.33-29.28-11.15-.19-.08-.9-1.8-2.39-2.43-4.76-2.03-24.14-8.87-25.22-12.47-.24-34.98-.6-70.02-.27-104.99.06-6.02-.05-12.09,0-18.12l15.33,6.96c-.57,2.16.39,5.89,0,8.36-.87.05-2.3-.21-2.79,0l-1.39,1.39c-.57,2.04.08,7.05,0,9.76-.18,6.27,1.44,13.67,1.39,18.12-.08,8.82-1.48,18.28-1.39,27.88.05,5.39,1.32,11.47,1.39,15.34.11,5.5-2.32,12.53-1.39,19.52.24,1.82.99,2.81,1.39,4.18-.34,3.09-.38,4.52,1.39,6.97.91,1.26,2.17,2.03,3.59,2.62l54.95,22.46-13-8.59c-10.83-7.31-29.86-13.05-39.89-20.08-.9-.63-1-1.26-1.47-1.98v-29.28c0-21.35-.13-42.78,0-64.13v-4.18c.01-3.25-.03-6.51,0-9.76.03-3.71-.11-7.45,0-11.15.1-3.24-.08-6.52,0-9.75.46-.49,5.73.85,6.96,1.39,1.4.62,5.8,4.94,8.36,5.58-.32,2.28.58,5.32.03,7.37-.4,1.48-2.84,1.4-3.47,2.37-2.8,4.31-1.97,92.49-.82,102.64.27,2.35,1.04,2.36,1.48,3.33.2.44.96.97,1.39,1.39.47.4.9,1.17,1.39,1.39,5.02,2.29,40.08,25.36,41.82,23.69.7-3.02-1.68-3.09-3.18-4.47-5.25-4.83-35.01-23.03-35.85-26.19-.15-20.82,1.5-41.23,1.45-62.09,0-3.63-1.54-7.05-1.52-11.03.13-19.32,2.29-38.57,1.46-57.92.22,0,1.76-1.4,4.18-1.39h.02ZM1031.07,164.51c-.15-.15-3.4-.96-4.15-.72l3.46,3.49c1.21.18.79-2.67.68-2.77h.01Z"/><path d="M1109.15,47.4c2.12,10.28,4.86,20.49,6.97,30.67.69,3.34,4.16,33.43,6.27,33.47,4.41-10.75,6.52-22.18,9.06-33.47.98-4.35,3.64-9.05,4.18-13.94,4.6,3.04,5.27,10.16,6.97,15.34,2.7,8.2,5.59,16.52,6.99,25.09,4.07-2.19,5.04-8.3,5.57-12.55.81-.74,10.69,4.51,12.53,5.58,2.49,1.44,5.48,3.02,6.97,5.58-2.22.03-8.6,2.88-12.55,1.39l-13.25,29.27c-2.32-5.3-3.18-11.23-4.87-16.72-1.98-6.45-4.95-12.68-5.59-19.52-.38-.39-1.74.74-2.09,1.38-4.7,8.56-6.43,26.58-9.05,36.26-1.19,4.42-2.88,9.27-4.18,13.94-.42,1.52-2.16,3.17-1.41,5.57h-1.35c0-.9-.72-2.56-1.43-2.78.24-5.76-1.7-11.2-2.79-16.73-3.55-18.04-7.44-36.1-9.77-54.37-2.5.43-2.39,2.82-2.98,4.68-1.8,5.65-2.61,12.99-3.98,19.02-2.41,10.65-4.84,21.35-6.97,32.06-.46-.03-.93.03-1.39,0l-11.16-41.82c-2.19-1.95-9.64,8.31-11.14,9.75-1.94,1.86-10.92,10.51-12.14,10.87-3.9,1.16-12.43.25-17.14.29-3.93.03-7.93.15-11.87,0-1.68-.06-5.18,1.05-4.85-1.38,6.57-.93,12.15-4.63,18.11-6.99,3.7-1.46,9.54-1.2,13.29-4.13,2.9-2.27,9.81-11.8,13.2-15.38,4.13-4.37,7.91-10.25,13.22-13.96,1.19-.83,1.39-1.93,3.5-1.37l6.97,22.3c3.01-16.33,6.78-32.44,9.77-48.79.08-.46,1.19-1.52,1.39-2.79.31-1.87,1.18-3.69,1.39-5.58.05-.46-.04-.93,0-1.39l2.79-2.79c.81,4.79,1.82,9.23,2.79,13.94h.02Z"/></g>
+        <g><path d="M11.65.06C21.36-.12,31.14.19,40.86.06c-.04,2.43.02,4.87,0,7.3-.03,4.05,0,8.12,0,12.17,0,2.43,0,4.87,0,7.3v1.22c-.04,8.91,0,17.87,0,26.77,0,7.29,0,14.62,0,21.91v62.06c-.37,7.66.27,15.46,0,23.13,9.32.02,18.68-.05,28,0s18.68-.05,27.99,0,17.88-.22,26.77,0c.41,0,.81-.02,1.22,0,2.43.09,4.89-.08,7.31,0,.22,1.53-.3,3.48,0,4.87v29.21c-.19.02-2.76.94-3.65,1.22h-60.85c-8.91,0-17.87.07-26.77,0-9.31-.07-18.68.07-27.99,0-4.05-.03-8.12.03-12.17,0-.1-61.05.1-122.14.07-183.21C.79,9.29-.98,5.15.79.14,4.4-.08,8.06.14,11.67.07h-.02Z"/><path d="M514.25,14.66c9.3-.22,18.68.16,27.99,0,.01,4.05-.02,8.12,0,12.17.05,8.1-.03,16.25,0,24.35,11.03.71,23.21-.99,34.08,0,.77.07,2-.2,2.43,0-2.97,10.84,1.21,21.8,0,32.86-1,1.01-11.49,2.35-14,2.42-6.3.17-16.47-2.53-21.29.02-.67.35-.92.44-1.22,1.22-.19.51.08,1.66,0,2.43-.04.4.02.81,0,1.22-.23,4.42.05,8.95,0,13.39-.07,6.85-.12,13.88,0,20.69.38,20.9-4.06,42.85,25.05,40.21,1.63-.15,2.57-1.2,2.94-1.26,2.42-.39,4.9-.41,7.29-1.22.62,3.56.7,7.43,1.23,10.96,1.08,7.24,2.75,14.49,2.43,21.91-1.62.29-7.07,2.99-10.95,3.65-8.97,1.52-17.79,1.72-26.77,0-4.35-.83-12.24-4.89-15.82-4.87-2.01-3.06-8.99-5.44-10.95-7.3-.6-.57-9.41-12.63-9.74-13.39-1.16-2.67-4.06-15.72-4.87-19.47v-65.72c.1-.38-.07-.83,0-1.22-4.15-3.37-21.53.91-23.81-2.36-2.14-3.07.49-25.11-.53-30.5,2.88-2.32,3.2-3.24,8.52-4.87,1.62-.5,4.11.12,6.96-.93,10.07-3.71,10.53-12.97,11.29-22.19.33-4-.24-8.16,0-12.18,3.23-.05,6.51.08,9.74,0v-.02Z"/><path d="M235.57,47.52c28.5,3.63,55.79,31.21,59.63,59.63,1.1,8.14-.81,18.37,0,26.78-10.13.02-20.3-.04-30.43,0-9.72.03-19.49-.03-29.21,0-9.31.03-18.68-.11-27.99,0-6.06.07-14.54-.82-20.12,0-1.82.27-1.93-.72-1.81,1.83.41,8.53,8.55,19.99,15.44,24.74,3.03,2.09,4.3,1.66,6.49,2.64,12.42,5.51,14.68,6.04,27.99,2.43,10.43-2.82,12.52-4.21,20.15-12.15.95-.99,1.65-3.33,1.96-3.51,1.48-.86,5.1,1.36,7.1,1.06,2.66,5.33,21.8,11.49,23.8,14.57,1.58,2.43-2.67,7.8-4.33,9.77-12.24,14.46-32.31,23.96-51.11,25.56-4.77.4-10.94.19-15.82,0-2.36-.09-5.07.29-7.3,0-.79-.1-1.73.15-2.43,0-3.72-.81-12.32-6.07-17.04-6.08-2.97-3.02-7.53-3.85-10.95-6.08-4.16-2.72-12.6-9.72-15.82-13.39-2.3-2.62-9.58-12.96-10.95-15.82-1.3-2.71-5.14-12.89-6.08-15.82-.26-.82.11-2.52,0-3.65-.1-1.03-.02-2.1-1.22-2.43.41-5.95-.49-12.34,0-18.25,2.85-34.76,25.43-66.85,62.06-71.8,5.72-.77,22.22-.74,27.99,0v-.03ZM206.37,81.59c-12.51,5.12-17.19,12.47-20.69,25.56h69.37c-1.02-11.25-9.4-25.28-21.91-25.56-.17-.18-3.88-2.56-4.11-2.63-8.83-2.65-14.7-.63-22.66,2.63Z"/><path d="M873.26,49.95l-2.44,36.5c-10.04-2.1-18.34-2.01-27.98,1.22-1.06.35-1.63.83-2.43,1.22-2.06.97-2.49.73-4.87,2.43s-5.77,4.49-7.37,6.68c-1.3,1.77-.8,3.64-1.15,4.28-7.67,13.88-5.74,22.1-6.08,37.73-.26,11.71-.09,23.57,0,35.29.05,6.88-.04,13.81,0,20.69v1.22c-9.3-.19-18.69.26-27.99,0-3.83-.11-8.58-1.16-10.95-1.22v-20.69c0-18.64-.02-37.34,0-55.98.03-20.26-.61-40.63,0-60.85.04-1.21-.04-2.44,0-3.65s-.06-2.44,0-3.65c8.93-.19,17.84-.36,26.78,0,2.66.11,6.81-.57,8.94-.02,1.29.34.69,2.38.8,2.45v19.47l8.52-12.16c2.46-.2,3.66-2.82,4.87-3.65,3.92-2.71,12.43-6.21,17.04-7.3.38-.09.83.08,1.22,0,5.67-1.1,18.14-2.51,23.12,0h-.03Z"/><path d="M402.29,47.52c.4.02.81-.03,1.22,0,4.32.35,9.19,1.37,13.39,2.43,3.77.95,11.25,3.27,14.6,4.87.76.36,1.7.82,2.43,1.22,6.2,3.39,17.73,13.71,21.91,19.47,1.82,2.51,7,11.4,7.32,14.07.28,2.36-1.98,2.2-3.67,2.97-8.88,4.03-18.37,7.1-26.77,12.17-.69-.16-1.66.11-2.43,0-.21-.35-1.88-.84-2.44-1.77-7.76-12.8-9.88-15.04-24.33-18.92-.54-.14-1.3-1.02-2.43-1.22-6.25-1.11-7.24-1.08-13.39,0-4.75.83-6.68,1.55-10.95,3.65-14.1,6.95-21.35,22.19-20.69,37.73-.95,13.86,6.7,28.04,18.25,35.29s15.46,6.93,27.99,4.87,18.05-5.64,24.15-16.63c1.03-1.86,1.22-5.1,1.42-5.29.46-.43,4.65,1.56,6.07,1.22,5.57,5.12,17.35,7.34,24.34,10.95,7.08,3.66,4.85,6.43,1.22,13.39-.24.47-3.43,5.79-3.65,6.08-12.69,16.67-34.39,23.5-53.55,27.99-1.04.24-2.57-.22-3.65,0-2-.6-3.99-1.04-6.08-1.22-4.95-.42-12.46-.31-17.04-1.22-3.22-.64-11.49-3.51-14.6-4.87-2.62-1.14-11.06-5.71-13.39-7.3-2.9-1.98-11.02-9.46-13.39-12.17-4.11-4.71-11.19-16.14-13.39-21.91-1.29-3.4-1.1-9-3.65-12.17.56-5.71-1.04-15.28-1.22-21.91-.02-.81,0-1.62,0-2.43v-4.87c1.43-5.16,2.9-10.86,4.87-15.82,2.08-5.24,5.38-12.43,8.52-17.04,9.54-14.01,29.64-27.04,46.24-30.42,7.7-1.57,18.87-1.7,26.77-1.22v.03Z"/><path d="M710.18,54.82c1.23.55,2.84.79,3.65,1.22,6.13,3.22,18.74,13,23.12,18.25.26.32,1.7,2.62,2.43,3.65,8.61,12.14,13.06,26.69,14.6,41.38.52,5-.63,10.92,0,15.82-6.27,36.37-34.6,63.26-71.8,65.72-7.66.5-20.46.06-27.99-1.22-3.31-.56-6.45-3.17-12.17-3.65-4.15-4.01-9.81-6.29-14.6-9.74-4.72-3.4-9.01-7.16-13.39-10.95l-15.82-26.77c-.07-3.61-1.15-6.63-1.22-9.74-.16-6.97-.33-12.74,0-19.47.24-4.83.2-8.51,1.22-13.39,1.79-8.59,7.02-20.89,12.17-27.99,8.57-11.82,29.77-25.8,43.81-29.21,4.12-1,23.93-2.59,27.99-2.43,6.11.23,21.9,5.8,27.99,8.52h.01ZM654.2,88.89c-8.2,5.4-9.17,6.7-13.39,15.82-.36.78-.81,1.33-1.22,2.43-.13.35.12.85,0,1.22-.43,1.29-.8,1.87-1.22,3.65-4.32,18.49-1.17,36.66,15.82,47.46,11.19,7.12,16.48,6.94,29.21,4.87,11.92-1.94,16.69-5.55,23.12-15.82,7.41-11.83,8.54-25.51,4.87-38.94-.39-1.43-1.73-3.35-2.43-4.87-6.26-13.56-11.52-17.23-25.56-20.69-13.23-3.27-17.67-2.72-29.21,4.87h0Z"/></g>
+      </svg>
+    </div>
+    <p style="margin:0 0 20px; font-size:13px; color:var(--muted);" id="license-sub">
+      Enter your license key to continue.
+    </p>
+    <input id="license-key" type="text" placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+      style="width:100%; padding:10px 14px; font-size:13px; border:1px solid var(--border);
+        border-radius:8px; background:var(--surface,#2d2d2d); color:var(--fg);
+        font-family:var(--font-ui); margin-bottom:10px;">
+    <p id="license-status" style="font-size:12px; min-height:18px; margin:0 0 14px;
+      color:var(--muted);"></p>
+    <button id="license-btn" style="padding:10px 28px; font-size:13px; font-weight:600;
+      border:none; border-radius:8px; background:var(--accent,#e63946); color:#fff;
+      cursor:pointer; font-family:var(--font-ui);">Activate</button>
+    <p style="margin:14px 0 0; font-size:11px; color:var(--muted);">
+      Your key is in the receipt email from Gumroad.<br>
+      <a href="mailto:hello@simdadllc.com" style="color:var(--muted);">hello@simdadllc.com</a>
+    </p>
+  </div>
+</div>
 
 <!-- ── Toolbar ──────────────────────────────────────────────────────────── -->
 <div id="toolbar">
-  <span class="brand" id="brand">ScriVocalis</span>
+  <span class="brand" id="brand">Lector</span>
+
+  <div class="mode-switch" role="tablist" aria-label="Editor mode">
+    <button data-mode="edit" role="tab" aria-selected="true"  title="Edit (Ctrl/Cmd+E)">Edit</button>
+    <button data-mode="read" role="tab" aria-selected="false" title="Read (Ctrl/Cmd+E)">Read</button>
+  </div>
 
   <select id="voice-select">
     <optgroup label="Built-in" id="og-builtin"></optgroup>
@@ -239,92 +96,318 @@
   </select>
 
   <div class="speed-wrap">
-    Speed <input type="range" id="rate" min="0.5" max="4" value="1" step="0.25">
+    Speed <input type="range" id="rate" min="0.5" max="2.5" value="1" step="0.25">
     <span id="speed-label">1×</span>
   </div>
 
-  <button class="tbtn" id="btn-open-file">Open</button>
+  <div class="speed-wrap">
+    Volume <input type="range" id="volume" min="0" max="100" value="80" step="5">
+    <span id="volume-label">80%</span>
+  </div>
+
+  <div class="toolbar-spacer"></div>
+
+  <button class="tbtn" id="btn-open-file" aria-label="Open file (.docx or .md)">Open</button>
   <input type="file" id="file-input" hidden accept=".docx,.md">
 
-  <button class="tbtn" id="btn-save" title="Save as Markdown (Ctrl+S)">Save .md</button>
+  <button class="tbtn" id="btn-save" title="Save as Markdown (Ctrl+S)">Save</button>
 
-  <button class="tbtn" id="btn-dark" title="Toggle dark mode">🌙</button>
-  <button class="tbtn" id="btn-manage-voices">+ Voices</button>
+  <button class="tbtn" id="btn-library" title="Encrypted document library" aria-label="Open encrypted library">Library</button>
+
+  <button class="tbtn" id="btn-marks" title="Marks you've left on this document (Shift+click a sentence in Read mode)" aria-label="Open marks">Marks</button>
+
+  <button class="tbtn" id="btn-manage-voices" aria-label="Manage custom voices" title="Manage custom voices">Voices</button>
+
+  <button class="tbtn" id="btn-open-browser" aria-label="Open Lector in your default browser"
+    title="Open in browser (gives Grammarly + extensions)" hidden>Browser ↗</button>
+
+  <button class="tbtn" id="btn-help" aria-label="Open Lector help" title="Open Lector help">Help</button>
+
+  <button class="tbtn" id="btn-dark" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
 </div>
 
-<!-- ── Editor ──────────────────────────────────────────────────────────── -->
-<div id="editor-wrap">
-  <textarea id="editor" spellcheck="false"
-    placeholder="Paste text here, or open a .docx / .md file…&#10;&#10;Place your cursor anywhere and press Play."></textarea>
+<!-- ── Workspace (Editor + Reader; one visible at a time) ──────────────── -->
+<div id="workspace">
+  <div id="editor-wrap">
+    <textarea id="editor" spellcheck="false"
+      placeholder="Paste text here, or open a .docx / .md file…&#10;&#10;Place your cursor anywhere and press Play."></textarea>
+  </div>
+
+  <article id="reader" aria-label="Rendered document">
+    <div class="prose-inner"></div>
+  </article>
 </div>
+
+<!-- ── Error banner (surfaces TTS + decode failures; click to dismiss) ── -->
+<div id="error-banner" hidden role="alert" aria-live="assertive"></div>
 
 <!-- ── TTS progress bar ─────────────────────────────────────────────────── -->
 <div id="tts-progress"><div id="tts-progress-fill"></div></div>
+
+<!-- ── Context-sensitive hint strip (the "controls in the world" pattern) ── -->
+<div id="hint-strip"><span id="hint-text"></span></div>
 
 <!-- ── Playbar ─────────────────────────────────────────────────────────── -->
 <div id="playbar">
   <button class="pbtn" id="btn-play">▶  Play</button>
   <button class="pbtn" id="btn-pause" disabled>⏸  Pause</button>
   <button class="pbtn" id="btn-stop"  disabled>⏹  Stop</button>
-  <span id="status">Ready</span>
+  <span id="status" aria-live="polite">Ready</span>
   <span id="word-count"></span>
-  <a id="kofi-link" href="https://ko-fi.com/simdadllc" target="_blank" rel="noopener">☕ tip jar</a>
 </div>
 
-<!-- ── Voices modal ─────────────────────────────────────────────────────── -->
-<dialog id="voices-dlg">
-  <div class="dlg-header">
-    <h2>Manage Voices</h2>
-    <button id="btn-close-dlg">✕</button>
+<!-- ── Cheat sheet overlay — press ? anywhere to toggle ─────────────────── -->
+<dialog id="cheats-dlg" aria-modal="true" aria-label="Keyboard shortcuts">
+  <div class="dlg-header" style="padding:14px 18px 12px">
+    <h2 style="margin:0">Shortcuts</h2>
+    <button id="btn-close-cheats" aria-label="Close shortcuts">✕</button>
+  </div>
+  <div class="dlg-body" style="padding:8px 22px 22px">
+    <div class="cheats-grid">
+
+      <div class="cheats-section-label">Playback</div>
+      <kbd>Shift</kbd>+<kbd>Space</kbd>      <div class="cheats-desc">Play / Pause (works while typing)</div>
+      <kbd>Space</kbd>                       <div class="cheats-desc">Play / Pause (when editor isn't focused)</div>
+      <kbd>Esc</kbd>                         <div class="cheats-desc">Stop</div>
+      <kbd>Alt</kbd>+<kbd>,</kbd>            <div class="cheats-desc">Previous sentence</div>
+      <kbd>Alt</kbd>+<kbd>.</kbd>            <div class="cheats-desc">Next sentence</div>
+
+      <div class="cheats-section-label">Marks</div>
+      <kbd>Alt</kbd>+<kbd>M</kbd>            <div class="cheats-desc">Mark the sentence currently being read</div>
+      <span class="cheats-key-text">Shift+click</span><div class="cheats-desc">Mark a sentence (in Read mode)</div>
+      <span class="cheats-key-text">Click</span>      <div class="cheats-desc">Set Play anchor on a sentence (in Read mode)</div>
+
+      <div class="cheats-section-label">Editing</div>
+      <kbd>Ctrl</kbd>+<kbd>E</kbd>           <div class="cheats-desc">Toggle Edit / Read</div>
+      <kbd>Ctrl</kbd>+<kbd>S</kbd>           <div class="cheats-desc">Save as .md</div>
+
+      <div class="cheats-section-label">This sheet</div>
+      <kbd>?</kbd>                           <div class="cheats-desc">Show or hide this overlay</div>
+
+    </div>
+  </div>
+</dialog>
+
+<!-- ── Hub dialog — Library + Marks + Voices + Help in one tabbed surface ── -->
+<dialog id="hub-dlg" aria-modal="true" aria-label="Lector hub">
+  <div class="dlg-header hub-header">
+    <div class="hub-tabs" role="tablist" aria-label="Hub sections">
+      <button class="hub-tab" data-tab="library" role="tab" aria-selected="false">🔒 Library</button>
+      <button class="hub-tab" data-tab="marks"   role="tab" aria-selected="false">★ Marks</button>
+      <button class="hub-tab" data-tab="voices"  role="tab" aria-selected="false">🎙 Voices</button>
+      <button class="hub-tab" data-tab="help"    role="tab" aria-selected="false">? Help</button>
+    </div>
+    <button id="btn-close-hub" aria-label="Close hub">✕</button>
   </div>
   <div class="dlg-body">
 
-    <!-- Saved custom voices -->
-    <div>
-      <div class="section-label">Your Custom Voices</div>
-      <div id="custom-voice-list">
-        <span id="no-custom-msg">No custom voices yet.</span>
-      </div>
-    </div>
-
-    <!-- Add a voice -->
-    <div>
-      <div class="section-label">Add a Voice</div>
-      <p class="hint-text" style="margin-bottom:10px">
-        Record <strong>10–20 seconds</strong> of clear, quiet speech — no music or background noise.
-        Only the first 15 seconds are used; longer clips produce garbled output.
-        The voice is transcribed and cloned automatically using F5-TTS (first use downloads ~750 MB).
+    <!-- ── Library panel ─────────────────────────────────────────────── -->
+    <section class="hub-panel" data-panel="library" role="tabpanel" hidden>
+      <p class="hint-text" style="margin-bottom:12px">
+        Documents in your library are encrypted on this machine using a key
+        stored in the Windows Credential Manager. Nothing leaves your device.
+        <a href="https://doi.org/10.5281/zenodo.19931717" target="_blank" rel="noopener"
+           style="color:var(--accent)">How this works</a>.
       </p>
-      <div class="add-form">
-        <div>
-          <label>Audio sample (WAV, MP3, M4A)</label>
-          <label id="voice-file-label" for="voice-file-input">
-            <span>📂 Choose file…</span>
-            <span id="voice-file-name"></span>
-          </label>
-          <input type="file" id="voice-file-input" hidden accept=".wav,.mp3,.m4a,.flac,.ogg">
+
+      <div>
+        <div class="section-label">Save current draft</div>
+        <div class="add-form">
+          <div>
+            <label>Document name</label>
+            <input type="text" id="library-name-input" placeholder="e.g. Q1 Report Draft">
+          </div>
+          <button id="btn-library-save" disabled>🔒 Encrypt &amp; Save</button>
+          <div id="library-save-status" aria-live="polite"></div>
         </div>
-        <div>
-          <label>Voice name</label>
-          <input type="text" id="voice-name-input" placeholder="e.g. My Voice">
-        </div>
-        <button id="btn-save-voice" disabled>Save Voice</button>
-        <div id="voice-add-status"></div>
       </div>
-    </div>
+
+      <div style="margin-top:18px">
+        <div class="section-label">Your encrypted documents</div>
+        <div id="library-list">
+          <span id="library-empty-msg">No documents in your library yet.</span>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border)">
+        <div class="section-label">Recovery key</div>
+        <p class="hint-text" style="margin-bottom:8px">
+          Save this string somewhere safe (password manager, printed). You'll need it
+          to decrypt your library if you reinstall, switch machines, or lose your OS keystore.
+          <strong>Don't share it.</strong>
+        </p>
+        <div id="recovery-key-row" style="display:flex;gap:6px;align-items:stretch">
+          <code id="recovery-key-display" style="flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--muted);font:11px var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Click Reveal to display your key</code>
+          <button id="btn-recovery-reveal" class="tbtn" style="flex-shrink:0">Reveal</button>
+          <button id="btn-recovery-copy" class="tbtn" style="flex-shrink:0" hidden>Copy</button>
+        </div>
+        <div id="recovery-key-status" class="hint-text" style="margin-top:6px;min-height:14px"></div>
+      </div>
+    </section>
+
+    <!-- ── Marks panel ───────────────────────────────────────────────── -->
+    <section class="hub-panel" data-panel="marks" role="tabpanel" hidden>
+      <p class="hint-text" style="margin-bottom:12px">
+        Drop a mark on any sentence you want to come back to:
+        <strong>shift-click</strong> it in Read mode, or press
+        <kbd>Alt</kbd>+<kbd>M</kbd> while listening to mark the sentence
+        currently being read. Click the same mark again (or use
+        <kbd>Alt</kbd>+<kbd>M</kbd> again on the same sentence) to remove it.
+        Marks re-anchor whenever the marked text still exists.
+      </p>
+      <div id="marks-list">
+        <span id="marks-empty-msg" class="hint-text">No marks yet.</span>
+      </div>
+    </section>
+
+    <!-- ── Voices panel ──────────────────────────────────────────────── -->
+    <section class="hub-panel" data-panel="voices" role="tabpanel" hidden>
+      <div>
+        <div class="section-label">Your Custom Voices</div>
+        <div id="custom-voice-list">
+          <span id="no-custom-msg">No custom voices yet.</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Add a Voice</div>
+        <p class="hint-text" style="margin-bottom:10px">
+          Upload <strong>5–15 seconds</strong> of clear speech for best results. The voice is cloned using F5-TTS (first use downloads the model).
+        </p>
+        <details style="margin-bottom:10px;font-size:0.8rem;color:#999;line-height:1.5;">
+          <summary style="cursor:pointer;color:#bbb;">Best outcome tips</summary>
+          <ul style="margin:6px 0 0 16px;">
+            <li><strong>Audio quality:</strong> Use a good microphone in a quiet room. No background music, TV, or fan noise.</li>
+            <li><strong>Duration:</strong> 5–15 seconds is optimal. Too short and the voice lacks character; too long adds processing time with diminishing returns.</li>
+            <li><strong>Content:</strong> Read a full sentence naturally, at your normal pace. Avoid whispering or exaggerated speech.</li>
+            <li><strong>Format:</strong> WAV at 24 kHz mono is ideal. MP3/M4A/FLAC are accepted and converted automatically.</li>
+            <li><strong>Single speaker only.</strong> No overlapping voices or interruptions.</li>
+            <li><strong>Consistent tone:</strong> Match the energy you want in the output. A calm reading voice produces calm output.</li>
+          </ul>
+        </details>
+        <div class="add-form">
+          <div>
+            <label>Audio sample (WAV, MP3, M4A)</label>
+            <label id="voice-file-label" for="voice-file-input" aria-label="Choose audio file for voice cloning">
+              <span>📂 Choose file…</span>
+              <span id="voice-file-name"></span>
+            </label>
+            <input type="file" id="voice-file-input" hidden accept=".wav,.mp3,.m4a,.flac,.ogg">
+          </div>
+          <div>
+            <label>Voice name</label>
+            <input type="text" id="voice-name-input" placeholder="e.g. My Voice">
+          </div>
+          <button id="btn-save-voice" disabled>Save Voice</button>
+          <div id="voice-add-status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Help panel ────────────────────────────────────────────────── -->
+    <section class="hub-panel" data-panel="help" role="tabpanel" hidden>
+      <div>
+        <div class="section-label">Reading and writing</div>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          <strong>Edit</strong> shows the raw Markdown for writing.
+          <strong>Read</strong> renders it as a clean page. Toggle with the buttons at top
+          or press <kbd>Ctrl</kbd>+<kbd>E</kbd>. Save as a .md file with <kbd>Ctrl</kbd>+<kbd>S</kbd>.
+        </p>
+      </div>
+      <div>
+        <div class="section-label">Read Along</div>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          In Edit mode, place the cursor where you want to start; in Read mode, click a
+          sentence to anchor it. Press <strong>Play</strong>. Lector synthesizes audio one
+          sentence at a time using a local TTS engine. First playback after launch takes
+          ~15 seconds while the model loads; subsequent sentences are immediate.
+          Use <strong>Volume</strong> in the toolbar to adjust output level.
+        </p>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          Keyboard shortcuts (work while typing):<br>
+          <kbd>Shift</kbd>+<kbd>Space</kbd> &nbsp;Play / Pause &nbsp;·&nbsp;
+          <kbd>Alt</kbd>+<kbd>,</kbd> &nbsp;Previous sentence &nbsp;·&nbsp;
+          <kbd>Alt</kbd>+<kbd>.</kbd> &nbsp;Next sentence &nbsp;·&nbsp;
+          <kbd>Esc</kbd> &nbsp;Stop
+        </p>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          When the editor isn't focused (e.g. in Read mode), plain <kbd>Space</kbd> also
+          toggles Play / Pause.
+        </p>
+      </div>
+      <div>
+        <div class="section-label">Marks</div>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          <strong>Shift-click</strong> a sentence in Read mode to mark it, or press
+          <kbd>Alt</kbd>+<kbd>M</kbd> while listening to mark the sentence currently being
+          read. Open <strong>Marks</strong> to see the list, jump to one in Edit mode, or
+          remove it. Marks are session-scoped and re-anchor whenever the marked text
+          still exists.
+        </p>
+      </div>
+      <div>
+        <div class="section-label">Voices</div>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          Twelve built-in Kokoro voices (American and British English, male and female).
+          Open <strong>Voices</strong> to clone a custom voice from a 5-to-15 second WAV/MP3 sample.
+          Custom voices use F5-TTS and produce one sentence every ~10 seconds on a recent GPU.
+        </p>
+      </div>
+      <div>
+        <div class="section-label">Encrypted library</div>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          Open <strong>Library</strong> to save drafts encrypted at rest with a key stored in
+          your OS keychain. Nothing leaves your machine. Export your recovery key
+          before reinstalling.
+        </p>
+      </div>
+      <div>
+        <div class="section-label">More</div>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          Full documentation, updates, and contact at
+          <a href="https://uselector.app" target="_blank" rel="noopener" style="color:var(--accent);border-bottom:1px solid var(--accent)">uselector.app</a>.
+        </p>
+      </div>
+    </section>
 
   </div>
 </dialog>
 
+<script src="/static/vendor/marked.min.js"></script>
 <script>
+// ── API base URL ─────────────────────────────────────────────────────────────
+// In dev/browser mode: empty (same origin). In Tauri: sidecar port.
+const API = window.__TAURI__ ? 'http://127.0.0.1:7860' : '';
+
+// Configure marked: GFM tables/strikethrough on, but no <br> on single newlines
+// (one-line paragraphs are a thing in prose) and no syntax highlighter shim.
+if (typeof marked !== 'undefined') {
+  marked.setOptions({ gfm: true, breaks: false });
+}
+
 // ── Refs ──────────────────────────────────────────────────────────────────────
 const brand        = document.getElementById('brand');
 const editor       = document.getElementById('editor');
+const reader       = document.getElementById('reader');
+const readerInner  = reader.querySelector('.prose-inner');
+const modeButtons  = document.querySelectorAll('.mode-switch button');
 const voiceSel     = document.getElementById('voice-select');
 const ogBuiltin    = document.getElementById('og-builtin');
 const ogCustom     = document.getElementById('og-custom');
 const rateInput    = document.getElementById('rate');
 const speedLabel   = document.getElementById('speed-label');
+const volumeInput  = document.getElementById('volume');
+const volumeLabel  = document.getElementById('volume-label');
+const btnMarks     = document.getElementById('btn-marks');
+const hubDlg       = document.getElementById('hub-dlg');
+const btnCloseHub  = document.getElementById('btn-close-hub');
+const hubTabs      = hubDlg.querySelectorAll('.hub-tab');
+const hubPanels    = hubDlg.querySelectorAll('.hub-panel');
+// Aliases so existing JS that references the per-feature dialogs keeps working.
+const marksDlg     = hubDlg;
+const btnCloseMarks= btnCloseHub;
+const marksList    = document.getElementById('marks-list');
+const marksEmpty   = document.getElementById('marks-empty-msg');
 const btnPlay      = document.getElementById('btn-play');
 const btnPause     = document.getElementById('btn-pause');
 const btnStop      = document.getElementById('btn-stop');
@@ -335,8 +418,23 @@ const btnOpenFile  = document.getElementById('btn-open-file');
 const fileInput    = document.getElementById('file-input');
 const btnSaveMd    = document.getElementById('btn-save');
 const btnManage    = document.getElementById('btn-manage-voices');
-const dlg          = document.getElementById('voices-dlg');
-const btnCloseDlg  = document.getElementById('btn-close-dlg');
+const dlg          = hubDlg;            // alias to unified hub
+const btnCloseDlg  = btnCloseHub;       // alias to unified hub close
+
+// Hub tab switching. selectHubTab is safe to call even before later-defined
+// renderers exist; it guards with typeof checks.
+function selectHubTab(name) {
+  hubTabs.forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name ? 'true' : 'false'));
+  hubPanels.forEach(p => p.hidden = (p.dataset.panel !== name));
+  if (name === 'marks'   && typeof renderMarksDialog === 'function') renderMarksDialog();
+  if (name === 'library' && typeof refreshLibrary    === 'function') refreshLibrary();
+}
+function openHub(tab) {
+  _hubTrigger = document.activeElement;   // restore focus here on close
+  selectHubTab(tab || 'library');
+  if (!hubDlg.open) hubDlg.showModal();
+}
+hubTabs.forEach(t => t.addEventListener('click', () => selectHubTab(t.dataset.tab)));
 const customList   = document.getElementById('custom-voice-list');
 const noCustomMsg  = document.getElementById('no-custom-msg');
 const voiceFileIn  = document.getElementById('voice-file-input');
@@ -347,7 +445,8 @@ const voiceAddStat = document.getElementById('voice-add-status');
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let audioCtx      = null;
-let audioSource   = null;
+let audioSource   = null;   // legacy buffer-source ref (kept for compat; unused)
+let audioEl       = null;   // HTMLAudioElement — pitch-preserving playback
 let isPlaying     = false;
 let isPaused      = false;
 let stopSignal    = false;
@@ -355,6 +454,9 @@ let rafId         = null;
 let allVoices     = [];
 let playGen       = 0;   // incremented on every new Play; lets old coroutines self-abort
 let currentFilename = 'manuscript.md';
+// The sentence currently being played (or the last one played, after pause/stop).
+// Read by the keyboard step-back/forward shortcuts and "mark current sentence".
+let currentSentenceIdx = 0;
 
 // ── Persistence: restore saved content ───────────────────────────────────────
 (function restoreDraft() {
@@ -367,6 +469,11 @@ let currentFilename = 'manuscript.md';
     rateInput.value = savedSpeed;
     const v = parseFloat(savedSpeed);
     speedLabel.textContent = (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2).replace(/0$/, '')) + '×';
+  }
+  const savedVolume = localStorage.getItem('vox:volume');
+  if (savedVolume !== null) {
+    volumeInput.value = savedVolume;
+    volumeLabel.textContent = `${savedVolume}%`;
   }
   updateWordCount();
 })();
@@ -390,6 +497,229 @@ function updateWordCount() {
   wordCountEl.textContent = words > 0 ? words.toLocaleString() + ' w' : '';
 }
 
+// ── Reader mode: render + sentence wrap + mode toggle ─────────────────────────
+// Track the editor.value last rendered to skip redundant re-renders on toggle.
+let _lastReaderSource = null;
+
+function renderReader() {
+  if (typeof marked === 'undefined') {
+    readerInner.textContent = editor.value;
+    return;
+  }
+  readerInner.innerHTML = marked.parse(editor.value || '');
+  wrapSentencesIn(readerInner);
+  reapplyMarksToReader();
+  _lastReaderSource = editor.value;
+  // Re-render invalidates any previously chosen anchor — its data-idx is gone.
+  readerAnchorIdx = null;
+}
+
+// Read-mode "cursor": click a sentence in the Reader to mark where Play
+// should start. Persists across pauses/stops; cleared on re-render or when
+// the user switches voices+text+Play with a new anchor.
+//   Plain click → set Play anchor (parchment-gold outline)
+//   Shift+click → toggle a Mark on that sentence (amber wavy underline)
+let readerAnchorIdx = null;
+document.getElementById('reader').addEventListener('click', (e) => {
+  if (!document.body.classList.contains('mode-read')) return;
+  const span = e.target.closest && e.target.closest('.lector-sentence');
+  if (!span) return;
+  if (e.shiftKey) {
+    toggleMarkForSpan(span);
+    return;
+  }
+  readerInner.querySelectorAll('.lector-sentence.lector-anchor')
+    .forEach(el => el.classList.remove('lector-anchor'));
+  span.classList.add('lector-anchor');
+  const idx = Number(span.dataset.idx);
+  readerAnchorIdx = Number.isFinite(idx) ? idx : null;
+});
+
+// Error banner — surfaces TTS/decode failures the user would otherwise miss.
+const errorBanner = document.getElementById('error-banner');
+function showError(msg) {
+  if (!errorBanner) return;
+  errorBanner.textContent = String(msg).slice(0, 500);
+  errorBanner.hidden = false;
+}
+function hideError() {
+  if (!errorBanner) return;
+  errorBanner.hidden = true;
+  errorBanner.textContent = '';
+}
+errorBanner && errorBanner.addEventListener('click', hideError);
+
+// Walk text nodes inside block elements and wrap each detected sentence in
+// <span class="lector-sentence">. Skips text inside <code>, <pre>, and <a> so
+// inline tokens and code stay intact.
+function wrapSentencesIn(root) {
+  const skipParents = new Set(['CODE', 'PRE', 'A']);
+  const isInside = (node) => {
+    let n = node.parentNode;
+    while (n && n !== root) {
+      if (skipParents.has(n.nodeName)) return true;
+      n = n.parentNode;
+    }
+    return false;
+  };
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  let node;
+  while ((node = walker.nextNode())) {
+    if (!isInside(node) && node.textContent.trim().length > 0) {
+      textNodes.push(node);
+    }
+  }
+
+  let idx = 0;
+  for (const textNode of textNodes) {
+    const text = textNode.textContent;
+    const sentences = splitSentences(text);
+    if (sentences.length === 0) continue;
+
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    for (const sent of sentences) {
+      const sidx = text.indexOf(sent, pos);
+      if (sidx < 0) continue;
+      if (sidx > pos) frag.appendChild(document.createTextNode(text.slice(pos, sidx)));
+      const span = document.createElement('span');
+      span.className = 'lector-sentence';
+      span.dataset.idx = String(idx++);
+      span.textContent = sent;
+      frag.appendChild(span);
+      pos = sidx + sent.length;
+    }
+    if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+    textNode.parentNode.replaceChild(frag, textNode);
+  }
+}
+
+function highlightInReader(sentenceText) {
+  if (!sentenceText) return;
+  const target = sentenceText.trim();
+  readerInner.querySelectorAll('.lector-sentence.lector-active')
+    .forEach(el => el.classList.remove('lector-active'));
+  const spans = readerInner.querySelectorAll('.lector-sentence');
+  for (const span of spans) {
+    if (span.textContent.trim() === target) {
+      span.classList.add('lector-active');
+      span.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
+  }
+}
+
+function setMode(mode) {
+  if (mode !== 'edit' && mode !== 'read') return;
+  if (mode === 'read' && editor.value !== _lastReaderSource) {
+    renderReader();
+  }
+  document.body.classList.toggle('mode-edit', mode === 'edit');
+  document.body.classList.toggle('mode-read', mode === 'read');
+  modeButtons.forEach(b => {
+    b.setAttribute('aria-selected', b.dataset.mode === mode ? 'true' : 'false');
+  });
+  if (typeof updateHints === 'function') updateHints();
+}
+
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
+
+// ── Recovery key reveal + copy ───────────────────────────────────────────────
+const recoveryDisplay = document.getElementById('recovery-key-display');
+const btnRecoveryReveal = document.getElementById('btn-recovery-reveal');
+const btnRecoveryCopy = document.getElementById('btn-recovery-copy');
+const recoveryStatus = document.getElementById('recovery-key-status');
+let _revealedKey = null;
+if (btnRecoveryReveal) {
+  btnRecoveryReveal.addEventListener('click', async () => {
+    btnRecoveryReveal.disabled = true;
+    recoveryStatus.textContent = '';
+    try {
+      const r = await fetch(API + '/identity/recovery-key');
+      const data = await r.json();
+      if (data.key) {
+        _revealedKey = data.key;
+        recoveryDisplay.textContent = data.key;
+        recoveryDisplay.style.color = 'var(--text)';
+        btnRecoveryReveal.hidden = true;
+        btnRecoveryCopy.hidden = false;
+      } else {
+        recoveryStatus.textContent = data.error || 'Could not load key.';
+        recoveryStatus.className = 'hint-text status-err';
+        btnRecoveryReveal.disabled = false;
+      }
+    } catch (e) {
+      recoveryStatus.textContent = 'Could not reach server: ' + e.message;
+      recoveryStatus.className = 'hint-text status-err';
+      btnRecoveryReveal.disabled = false;
+    }
+  });
+}
+if (btnRecoveryCopy) {
+  btnRecoveryCopy.addEventListener('click', async () => {
+    if (!_revealedKey) return;
+    try {
+      await navigator.clipboard.writeText(_revealedKey);
+      recoveryStatus.textContent = 'Copied. Paste it into your password manager now.';
+      recoveryStatus.className = 'hint-text status-ok';
+    } catch (e) {
+      recoveryStatus.textContent = 'Clipboard blocked — select and copy manually.';
+      recoveryStatus.className = 'hint-text status-err';
+    }
+  });
+}
+
+// ── Help modal ────────────────────────────────────────────────────────────────
+const btnHelp = document.getElementById('btn-help');
+const helpDlg = hubDlg;                 // alias to unified hub
+if (btnHelp) {
+  btnHelp.addEventListener('click', () => openHub('help'));
+}
+
+// ── Open in browser (Tauri-only; gives customers Grammarly + extensions) ──────
+const btnOpenBrowser = document.getElementById('btn-open-browser');
+if (window.__TAURI__ && btnOpenBrowser) {
+  btnOpenBrowser.hidden = false;
+  btnOpenBrowser.addEventListener('click', async () => {
+    try {
+      // tauri-plugin-shell exposes shell.open(); imported via global plugin namespace.
+      const shell = window.__TAURI__.shell || (window.__TAURI__.core && window.__TAURI__.core.invoke);
+      if (window.__TAURI__.shell && window.__TAURI__.shell.open) {
+        await window.__TAURI__.shell.open('http://127.0.0.1:7860');
+      } else if (window.__TAURI_INTERNALS__) {
+        // Tauri 2.x: invoke the shell plugin's open command directly.
+        await window.__TAURI_INTERNALS__.invoke('plugin:shell|open', { path: 'http://127.0.0.1:7860' });
+      } else {
+        window.open('http://127.0.0.1:7860', '_blank');
+      }
+    } catch (e) {
+      console.error('Failed to open browser:', e);
+      setStatus('Could not open browser — copy http://127.0.0.1:7860 manually');
+    }
+  });
+}
+
+// Ctrl/Cmd+E toggles Edit ↔ Read. Ctrl+R is reserved by the browser.
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'e') {
+    e.preventDefault();
+    setMode(document.body.classList.contains('mode-edit') ? 'read' : 'edit');
+  }
+});
+
+// If the source changes while we're in Read mode, re-render after typing pauses.
+// (Rare — typing usually happens in Edit mode — but covers paste-then-toggle flows.)
+editor.addEventListener('input', () => {
+  if (document.body.classList.contains('mode-read')) {
+    clearTimeout(renderReader._t);
+    renderReader._t = setTimeout(renderReader, 250);
+  }
+});
+
 // ── Export / Save as .md ──────────────────────────────────────────────────────
 function saveMd() {
   const blob = new Blob([editor.value], { type: 'text/markdown' });
@@ -402,10 +732,129 @@ function saveMd() {
 }
 btnSaveMd.addEventListener('click', saveMd);
 
+// ── Sentence navigation helpers (used by hotkeys) ─────────────────────────────
+function resolveCurrentSentenceIdx(paras) {
+  if (isPlaying && currentSentenceIdx < paras.length) return currentSentenceIdx;
+  const inReadMode = document.body.classList.contains('mode-read');
+  if (inReadMode && readerAnchorIdx !== null && readerAnchorIdx < paras.length) {
+    return readerAnchorIdx;
+  }
+  return findStartUnit(paras, editor.selectionStart);
+}
+
+async function jumpToSentence(targetIdx) {
+  if (!editor.value.trim()) return;
+  hideError();
+  stopSignal = true;
+  if (audioSource) try { audioSource.stop(); } catch (_) {}
+  await sleep(50);
+  await ensureCtx();
+  const paras = parseUnits(editor.value);
+  if (paras.length === 0) return;
+  const idx = Math.max(0, Math.min(paras.length - 1, targetIdx));
+  currentSentenceIdx = idx;
+  stopSignal = false; isPlaying = true; isPaused = false;
+  setControls(true);
+  updateHints();
+  playFrom(paras, idx);
+}
+
+function togglePlayPause() {
+  if (!isPlaying) btnPlay.click();
+  else btnPause.click();
+}
+
+function markCurrentSentence() {
+  const paras = parseUnits(editor.value);
+  if (paras.length === 0) return;
+  const idx = resolveCurrentSentenceIdx(paras);
+  if (idx < 0 || idx >= paras.length) return;
+  toggleMarkByText(paras[idx].text);
+}
+
+// ── Cheat sheet overlay — discoverable via "?" key + hint strip ─────────────
+const cheatsDlg = document.getElementById('cheats-dlg');
+const btnCloseCheats = document.getElementById('btn-close-cheats');
+function toggleCheats() {
+  if (cheatsDlg.open) cheatsDlg.close();
+  else cheatsDlg.showModal();
+}
+btnCloseCheats.addEventListener('click', () => cheatsDlg.close());
+cheatsDlg.addEventListener('click', e => { if (e.target === cheatsDlg) cheatsDlg.close(); });
+
+// ── Hint strip — "controls in the world." Updates as state changes. ─────────
+const hintText = document.getElementById('hint-text');
+const SEP = '<span class="hint-sep">·</span>';
+function updateHints() {
+  const inReadMode = document.body.classList.contains('mode-read');
+  let parts;
+  if (isPlaying && isPaused) {
+    parts = [
+      '<kbd>Shift</kbd>+<kbd>Space</kbd> resume',
+      '<kbd>Alt</kbd>+<kbd>,</kbd> previous',
+      '<kbd>Alt</kbd>+<kbd>M</kbd> mark this sentence',
+      '<kbd>Esc</kbd> stop',
+    ];
+  } else if (isPlaying) {
+    parts = [
+      '<kbd>Shift</kbd>+<kbd>Space</kbd> pause',
+      '<kbd>Alt</kbd>+<kbd>,</kbd> prev',
+      '<kbd>Alt</kbd>+<kbd>.</kbd> next',
+      '<kbd>Alt</kbd>+<kbd>M</kbd> mark',
+      '<kbd>Esc</kbd> stop',
+    ];
+  } else if (inReadMode) {
+    parts = [
+      'click a sentence to anchor',
+      'shift-click to mark',
+      '<kbd>Shift</kbd>+<kbd>Space</kbd> play',
+      '<kbd>?</kbd> all shortcuts',
+    ];
+  } else {
+    parts = [
+      '<kbd>Shift</kbd>+<kbd>Space</kbd> play',
+      '<kbd>Ctrl</kbd>+<kbd>E</kbd> Read mode',
+      '<kbd>Ctrl</kbd>+<kbd>S</kbd> save',
+      '<kbd>?</kbd> all shortcuts',
+    ];
+  }
+  hintText.innerHTML = parts.join(SEP);
+}
+updateHints();
+
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveMd(); }
-  if (e.key === 'Escape' && isPlaying) { btnStop.click(); }
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveMd(); return; }
+  if (e.key === 'Escape' && isPlaying) { btnStop.click(); return; }
+
+  // "?" toggles the cheat sheet. Don't fire while user is typing in a field.
+  const _ae = document.activeElement;
+  const _typing = _ae && /^(INPUT|TEXTAREA|SELECT)$/.test(_ae.tagName);
+  if (e.key === '?' && !_typing) { e.preventDefault(); toggleCheats(); return; }
+
+  // Skip playback shortcuts when the user is typing in the editor (unless they
+  // hold Shift/Alt as an explicit override).
+  const ae = document.activeElement;
+  const inEditor = ae === editor;
+  const inField  = ae && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName) && ae !== editor;
+
+  // Play / Pause:
+  //   Space         → toggle (only when editor isn't focused)
+  //   Shift+Space   → toggle (always; survives editing)
+  if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
+    if (e.shiftKey) { e.preventDefault(); togglePlayPause(); return; }
+    if (!inEditor && !inField) { e.preventDefault(); togglePlayPause(); return; }
+  }
+
+  // Sentence navigation + mark: Alt-modifier so they work while typing.
+  //   Alt + ,  → step back one sentence
+  //   Alt + .  → step forward one sentence
+  //   Alt + M  → toggle mark on the current sentence
+  if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+    if (e.key === ',') { e.preventDefault(); jumpToSentence(currentSentenceIdx - 1); return; }
+    if (e.key === '.') { e.preventDefault(); jumpToSentence(currentSentenceIdx + 1); return; }
+    if (e.key && e.key.toLowerCase() === 'm') { e.preventDefault(); markCurrentSentence(); return; }
+  }
 });
 
 // ── Progress bar ──────────────────────────────────────────────────────────────
@@ -415,7 +864,7 @@ function setProgress(frac) {
 
 // ── Voices ────────────────────────────────────────────────────────────────────
 async function loadVoices() {
-  allVoices = await fetch('/voices').then(r => r.json());
+  allVoices = await fetch(API + '/voices').then(r => r.json());
   renderVoiceSelect();
   renderCustomVoiceList();
   // Restore saved voice selection
@@ -451,8 +900,8 @@ function renderVoiceSelect() {
 function renderCustomVoiceList() {
   const custom = allVoices.filter(v => v.type === 'custom');
   noCustomMsg.style.display = custom.length ? 'none' : '';
-  // Remove old rows
-  customList.querySelectorAll('.voice-row').forEach(el => el.remove());
+  // Remove old rows (and their editors, which are siblings)
+  customList.querySelectorAll('.voice-row, .voice-ref-editor').forEach(el => el.remove());
   custom.forEach(v => {
     const name = v.id.replace('custom:', '');
     const row  = document.createElement('div');
@@ -461,28 +910,402 @@ function renderCustomVoiceList() {
       <div>
         <div class="voice-row-name">✦ ${v.name}</div>
       </div>
-      <button class="btn-delete" title="Delete voice" data-name="${name}">🗑</button>`;
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="tbtn voice-row-edit" title="Edit reference transcription">Edit text</button>
+        <button class="btn-delete" title="Delete voice" data-name="${name}">🗑</button>
+      </div>`;
+    const editor = document.createElement('div');
+    editor.className = 'voice-ref-editor';
+    editor.hidden = true;
+    editor.innerHTML = `
+      <p class="hint-text">
+        This should be the <strong>exact</strong> transcription of what's spoken in the
+        reference recording. Whisper auto-fills it on upload, but its punctuation, contractions,
+        and filler words are often slightly off. If the voice "bleeds" reference content into
+        generated speech, correcting this text is the fix.
+      </p>
+      <textarea class="voice-ref-text" rows="3" placeholder="Loading…"></textarea>
+      <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px">
+        <button class="tbtn voice-ref-save">Save</button>
+        <button class="tbtn voice-ref-cancel">Cancel</button>
+      </div>
+      <div class="voice-ref-status hint-text" style="margin-top:4px;min-height:14px"></div>
+    `;
+    const textarea = editor.querySelector('.voice-ref-text');
+    const statusEl = editor.querySelector('.voice-ref-status');
+    const btnEdit  = row.querySelector('.voice-row-edit');
+    const btnSave  = editor.querySelector('.voice-ref-save');
+    const btnCancel= editor.querySelector('.voice-ref-cancel');
+
+    btnEdit.addEventListener('click', async () => {
+      if (!editor.hidden) { editor.hidden = true; return; }
+      statusEl.textContent = '';
+      textarea.value = '';
+      textarea.placeholder = 'Loading…';
+      editor.hidden = false;
+      btnEdit.textContent = 'Close';
+      try {
+        const res  = await fetch(API + `/voice/${encodeURIComponent(name)}/ref-text`);
+        const data = await res.json();
+        textarea.value = data.ref_text || '';
+        textarea.placeholder = '';
+        textarea.focus();
+      } catch (e) {
+        statusEl.textContent = `Failed to load: ${e.message}`;
+      }
+    });
+    btnCancel.addEventListener('click', () => { editor.hidden = true; btnEdit.textContent = 'Edit text'; });
+    btnSave.addEventListener('click', async () => {
+      const txt = textarea.value.trim();
+      if (!txt) { statusEl.textContent = 'Reference text cannot be empty.'; return; }
+      btnSave.disabled = true;
+      statusEl.textContent = 'Saving…';
+      try {
+        const res = await fetch(API + `/voice/${encodeURIComponent(name)}/ref-text`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ ref_text: txt }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          statusEl.textContent = 'Saved. Re-Play to hear the effect.';
+          setTimeout(() => { editor.hidden = true; btnEdit.textContent = 'Edit text'; }, 900);
+        } else {
+          statusEl.textContent = data.error || 'Save failed.';
+        }
+      } catch (e) {
+        statusEl.textContent = `Save failed: ${e.message}`;
+      } finally {
+        btnSave.disabled = false;
+      }
+    });
+
     row.querySelector('.btn-delete').addEventListener('click', () => deleteVoice(name));
     customList.append(row);
+    customList.append(editor);
   });
 }
 
 async function deleteVoice(name) {
   if (!confirm(`Delete voice "${name}"?`)) return;
-  await fetch(`/voice/${name}`, { method: 'DELETE' });
+  await fetch(API + `/voice/${name}`, { method: 'DELETE' });
   await loadVoices();
 }
 
-loadVoices();
+// ── Boot gates: license + engine warm-up ─────────────────────────────────────
+// The app is revealed only when BOTH gates pass. License overlay covers the
+// warmup splash (higher z-index) so the activation flow comes first; once
+// activated, the warmup splash takes over until engines report ready.
+
+let _licenseOK = false;
+let _engineOK  = false;
+
+function _tryRevealApp() {
+  if (!_licenseOK || !_engineOK) return;
+  const warmup = document.getElementById('warmup-overlay');
+  if (warmup) {
+    warmup.style.transition = 'opacity .35s ease-out';
+    warmup.style.opacity = '0';
+    setTimeout(() => { warmup.style.display = 'none'; }, 360);
+  }
+  loadVoices();
+}
+
+// ── Engine warm-up poll ──────────────────────────────────────────────────────
+// Polls /status until Kokoro is ready (and F5 if the user has any custom voices).
+// Updates the splash text and progress bar as engines come online.
+
+(async function warmupGate() {
+  const stage  = document.getElementById('warmup-stage');
+  const detail = document.getElementById('warmup-detail');
+  const bar    = document.getElementById('warmup-bar');
+  if (!stage || !bar) { _engineOK = true; _tryRevealApp(); return; }
+
+  const POLL_MS = 600;
+
+  function paint(s, pct, hint) {
+    stage.textContent = s;
+    bar.style.width = pct + '%';
+    if (hint !== undefined) detail.textContent = hint;
+  }
+
+  paint('Starting Lector...', 8);
+
+  let lastPct = 8;
+  while (true) {
+    let st;
+    try {
+      const r = await fetch(API + '/status');
+      st = await r.json();
+    } catch (_) {
+      // server not ready yet — keep polling
+      await new Promise(r => setTimeout(r, POLL_MS));
+      continue;
+    }
+
+    const needsF5 = !!st.has_custom_voices;
+    const k = st.kokoro || 'cold';
+    const f = st.f5 || 'cold';
+
+    // Kokoro failure is fatal — no voices work. Stay on splash, show error.
+    if (k.startsWith('failed:')) {
+      paint('Speech engine (Kokoro) failed to load', 100,
+        `Reason: ${k.slice('failed:'.length)}. Restart Lector. If it persists, contact hello@simdadllc.com.`);
+      bar.style.background = '#c44';
+      bar.style.boxShadow = '0 0 12px #c44';
+      return;
+    }
+
+    // F5 failure is recoverable — built-in voices still work. Offer escape hatch.
+    if (needsF5 && f.startsWith('failed:')) {
+      paint('Voice cloning engine (F5-TTS) unavailable', 100,
+        `Custom voices won't be available this session. Built-in voices still work.\nReason: ${f.slice('failed:'.length)}`);
+      bar.style.background = '#c80';
+      bar.style.boxShadow = '0 0 12px #c80';
+      const btn = document.getElementById('warmup-continue');
+      if (btn) {
+        btn.style.display = 'inline-block';
+        btn.addEventListener('click', () => {
+          window._f5Disabled = true;   // frontend can read this to disable custom UI
+          _engineOK = true;
+          _tryRevealApp();
+        }, { once: true });
+      }
+      return;
+    }
+
+    // Stage progression
+    if (k === 'ready' && (!needsF5 || f === 'ready')) {
+      paint('Ready', 100, 'Loading interface...');
+      _engineOK = true;
+      _tryRevealApp();
+      return;
+    }
+
+    if (k !== 'ready') {
+      // Animate the bar gradually so it doesn't look stuck
+      lastPct = Math.min(60, lastPct + 1.5);
+      paint('Loading speech engine (Kokoro)...', lastPct,
+        'About 5–15 seconds on first launch. Subsequent clicks of Play are instant.');
+    } else if (needsF5 && f !== 'ready') {
+      lastPct = Math.max(60, Math.min(95, lastPct + 1));
+      paint('Loading voice cloning engine (F5-TTS)...', lastPct,
+        'About 20–60 seconds on first launch. Required because you have custom voices.');
+    }
+
+    await new Promise(r => setTimeout(r, POLL_MS));
+  }
+})();
+
+// ── License gate ──────────────────────────────────────────────────────────────
+
+(async function licenseGate() {
+  const overlay  = document.getElementById('license-overlay');
+  const keyInput = document.getElementById('license-key');
+  const btn      = document.getElementById('license-btn');
+  const statusP  = document.getElementById('license-status');
+  const subP     = document.getElementById('license-sub');
+
+  try {
+    const r = await fetch(API + '/license/check');
+    const d = await r.json();
+    if (d.valid) { _licenseOK = true; _tryRevealApp(); return; }
+    // Show reason-specific message
+    if (d.reason === 'revoked')
+      subP.textContent = 'Your license key is no longer valid. Enter a valid key below.';
+    else if (d.reason === 'grace_expired')
+      subP.textContent = 'Offline grace period expired. Connect to the internet and enter your key.';
+  } catch (_) {
+    // Server unreachable — skip gate (server not running yet or dev mode)
+    _licenseOK = true; _tryRevealApp();
+    return;
+  }
+
+  overlay.style.display = 'flex';
+
+  async function activate() {
+    const key = keyInput.value.trim();
+    if (!key) { statusP.textContent = 'Please enter your license key.'; statusP.style.color = '#ff6b6b'; return; }
+    btn.disabled = true; btn.textContent = 'Activating...';
+    statusP.textContent = 'Contacting activation server...'; statusP.style.color = 'var(--muted)';
+    try {
+      const r = await fetch(API + '/license/activate', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({key}),
+      });
+      const d = await r.json();
+      if (d.ok) {
+        statusP.textContent = 'Activated!'; statusP.style.color = '#2a9d5c';
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          _licenseOK = true;
+          _tryRevealApp();
+        }, 800);
+      } else {
+        statusP.textContent = d.error || 'Activation failed.'; statusP.style.color = '#ff6b6b';
+        btn.disabled = false; btn.textContent = 'Activate';
+      }
+    } catch (e) {
+      statusP.textContent = 'Network error. Check your connection.'; statusP.style.color = '#ff6b6b';
+      btn.disabled = false; btn.textContent = 'Activate';
+    }
+  }
+
+  btn.addEventListener('click', activate);
+  keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') activate(); });
+})();
 
 // ── Speed slider ──────────────────────────────────────────────────────────────
+// Speed has two layers: native Kokoro synthesis (server, 0.5–2.0×) plus a
+// pitch-preserving client stretch via HTMLAudioElement (any ratio). Slider
+// changes mid-sentence retune the client side immediately; the server side
+// applies on the *next* sentence fetch.
 rateInput.addEventListener('input', () => {
   const v = parseFloat(rateInput.value);
   speedLabel.textContent = (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2).replace(/0$/, '')) + '×';
   localStorage.setItem('vox:speed', rateInput.value);
+  if (audioEl && voiceSel.value) {
+    const isCustom = voiceSel.value.startsWith('custom:');
+    const { clientMult } = splitSpeed(v, isCustom);
+    try { audioEl.playbackRate = clientMult; } catch (_) {}
+  }
 });
 
 function getSpeedMult() { return parseFloat(rateInput.value); }
+
+// ── Volume slider ────────────────────────────────────────────────────────────
+volumeInput.addEventListener('input', () => {
+  const pct = parseFloat(volumeInput.value);
+  volumeLabel.textContent = `${pct}%`;
+  if (audioEl) audioEl.volume = currentVolume();
+  if (audioGain) audioGain.gain.value = currentVolume();   // legacy path; unused
+  localStorage.setItem('vox:volume', volumeInput.value);
+});
+
+// ── Marks — session-only sentence markers that survive Edit ↔ Read ──────────
+// Each mark = { id, start, end, snippet }. start/end are char offsets into
+// editor.value. The snippet is the canonical sentence text; we re-anchor on
+// edits by searching for the snippet, and we display it in the Marks dialog.
+const marks = [];
+let _markIdSeq = 0;
+
+function snippetOf(text) {
+  const t = text.trim();
+  return t.length > 90 ? t.slice(0, 87) + '…' : t;
+}
+
+function findMarkBySnippet(snippet) {
+  return marks.find(m => m.snippet === snippet);
+}
+
+// Core mark-toggle, addressable by sentence text. Used by both the shift-click
+// handler (which passes a span's textContent) and the Alt+M keyboard shortcut
+// (which passes the currently-playing sentence's text).
+function toggleMarkByText(text) {
+  const t = (text || '').trim();
+  if (!t) return;
+  const existing = findMarkBySnippet(t);
+  if (existing) {
+    marks.splice(marks.indexOf(existing), 1);
+  } else {
+    const idx = editor.value.indexOf(t);
+    if (idx < 0) {
+      showError(`Could not locate "${snippetOf(t)}" in the source.`);
+      return;
+    }
+    marks.push({
+      id:      ++_markIdSeq,
+      start:   idx,
+      end:     idx + t.length,
+      snippet: t,
+    });
+  }
+  // Sync the Reader DOM — toggle the class on every matching span.
+  readerInner.querySelectorAll('.lector-sentence').forEach(span => {
+    if (span.textContent.trim() === t) {
+      span.classList.toggle('lector-mark', !existing);
+    }
+  });
+}
+
+function toggleMarkForSpan(span) {
+  toggleMarkByText(span.textContent);
+}
+
+function reapplyMarksToReader() {
+  if (marks.length === 0) return;
+  const spans = readerInner.querySelectorAll('.lector-sentence');
+  for (const span of spans) {
+    if (findMarkBySnippet(span.textContent.trim())) {
+      span.classList.add('lector-mark');
+    }
+  }
+}
+
+// On editor edits, refresh each mark's char offsets by re-searching for its
+// snippet. If the snippet is gone (user deleted/edited the marked text), the
+// mark drops silently — that's the right behavior: marks are pointers to
+// text that still exists.
+function reanchorMarks() {
+  if (marks.length === 0) return;
+  for (let i = marks.length - 1; i >= 0; i--) {
+    const m = marks[i];
+    const idx = editor.value.indexOf(m.snippet);
+    if (idx < 0) {
+      marks.splice(i, 1);
+    } else {
+      m.start = idx;
+      m.end = idx + m.snippet.length;
+    }
+  }
+}
+editor.addEventListener('input', reanchorMarks);
+
+function jumpToMark(m) {
+  marksDlg.close();
+  setMode('edit');
+  // Editor must be visible for selection to render; defer one frame.
+  requestAnimationFrame(() => {
+    editor.focus();
+    editor.setSelectionRange(m.start, m.end);
+    scrollToChar(m.start);
+  });
+}
+
+function removeMark(m) {
+  const i = marks.indexOf(m);
+  if (i >= 0) marks.splice(i, 1);
+  // Strip the class from the matching Reader span if present.
+  readerInner.querySelectorAll('.lector-sentence.lector-mark').forEach(span => {
+    if (span.textContent.trim() === m.snippet) span.classList.remove('lector-mark');
+  });
+  renderMarksDialog();
+}
+
+function renderMarksDialog() {
+  marksList.innerHTML = '';
+  if (marks.length === 0) {
+    marksList.appendChild(marksEmpty);
+    marksEmpty.style.display = '';
+    return;
+  }
+  marksEmpty.style.display = 'none';
+  for (const m of marks) {
+    const row = document.createElement('div');
+    row.className = 'mark-row';
+    row.innerHTML = `
+      <div class="mark-snippet" data-action="jump">${snippetOf(m.snippet).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>
+      <button class="tbtn" data-action="jump" title="Switch to Edit mode at this mark">Jump</button>
+      <button class="tbtn" data-action="remove" title="Remove this mark">✕</button>
+    `;
+    row.querySelector('[data-action="jump"].mark-snippet').addEventListener('click', () => jumpToMark(m));
+    row.querySelector('button[data-action="jump"]').addEventListener('click', () => jumpToMark(m));
+    row.querySelector('button[data-action="remove"]').addEventListener('click', () => removeMark(m));
+    marksList.appendChild(row);
+  }
+}
+
+btnMarks.addEventListener('click', () => openHub('marks'));
 
 // ── Dark mode ─────────────────────────────────────────────────────────────────
 const btnDark = document.getElementById('btn-dark');
@@ -507,7 +1330,7 @@ fileInput.addEventListener('change', async () => {
   const form = new FormData();
   form.append('file', file);
   try {
-    const res  = await fetch('/parse', { method: 'POST', body: form });
+    const res  = await fetch(API + '/parse', { method: 'POST', body: form });
     const data = await res.json();
     if (data.error) { setStatus('Error: ' + data.error); return; }
     editor.value = data.text;
@@ -535,9 +1358,29 @@ voiceSel.addEventListener('change', async () => {
 });
 
 // ── Voices modal ──────────────────────────────────────────────────────────────
-btnManage.addEventListener('click', () => dlg.showModal());
-btnCloseDlg.addEventListener('click', () => dlg.close());
-dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+let _dlgTrigger = null;
+btnManage.addEventListener('click', () => openHub('voices'));
+
+// Unified hub close + outside-click + Tab focus trap. _hubTrigger remembers
+// which toolbar button opened the hub so focus returns there on close.
+let _hubTrigger = null;
+btnCloseHub.addEventListener('click', () => hubDlg.close());
+hubDlg.addEventListener('click', e => { if (e.target === hubDlg) hubDlg.close(); });
+hubDlg.addEventListener('close', () => {
+  if (_hubTrigger && _hubTrigger.focus) _hubTrigger.focus();
+  _hubTrigger = null;
+});
+hubDlg.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  // Restrict focus to the currently visible panel + the tab strip + close.
+  const focusable = hubDlg.querySelectorAll(
+    '.hub-tab, #btn-close-hub, .hub-panel:not([hidden]) button:not([disabled]), .hub-panel:not([hidden]) input:not([disabled]), .hub-panel:not([hidden]) select:not([disabled]), .hub-panel:not([hidden]) [tabindex]:not([tabindex="-1"])'
+  );
+  if (!focusable.length) return;
+  const first = focusable[0], last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 
 voiceFileIn.addEventListener('change', () => {
   const f = voiceFileIn.files[0];
@@ -548,13 +1391,133 @@ voiceNameIn.addEventListener('input', () => {
   btnSaveVoice.disabled = !(voiceFileIn.files[0] && voiceNameIn.value.trim());
 });
 
+// ── Encrypted library ────────────────────────────────────────────────────────
+const btnLibrary    = document.getElementById('btn-library');
+const libraryDlg    = hubDlg;            // alias to unified hub
+const btnCloseLib   = btnCloseHub;       // alias to unified hub close
+const libraryList   = document.getElementById('library-list');
+const libraryEmpty  = document.getElementById('library-empty-msg');
+const libraryName   = document.getElementById('library-name-input');
+const btnLibSave    = document.getElementById('btn-library-save');
+const libSaveStatus = document.getElementById('library-save-status');
+
+btnLibrary.addEventListener('click', () => openHub('library'));
+
+libraryName.addEventListener('input', () => {
+  btnLibSave.disabled = !libraryName.value.trim() || !editor.value.trim();
+});
+
+async function refreshLibrary() {
+  try {
+    const res  = await fetch(API + '/library');
+    const data = await res.json();
+    renderLibraryList(data.documents || []);
+  } catch (e) {
+    libraryList.innerHTML = `<span class="status-err">Failed to load library: ${e.message}</span>`;
+  }
+}
+
+function renderLibraryList(docs) {
+  libraryList.querySelectorAll('.lib-row').forEach(el => el.remove());
+  libraryEmpty.style.display = docs.length ? 'none' : '';
+  for (const d of docs) {
+    const row = document.createElement('div');
+    row.className = 'voice-row lib-row';
+    const when = new Date(d.modified).toLocaleString();
+    row.innerHTML = `
+      <div>
+        <div class="voice-row-name">🔒 ${escapeHtml(d.name)}</div>
+        <div style="font-size:0.75rem;color:#999">Saved ${escapeHtml(when)}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="tbtn" data-id="${escapeHtml(d.id)}" data-action="load">Load</button>
+        <button class="btn-delete" data-id="${escapeHtml(d.id)}" data-action="delete" title="Delete">🗑</button>
+      </div>`;
+    row.querySelector('[data-action="load"]').addEventListener('click', () => loadFromLibrary(d.id, d.name));
+    row.querySelector('[data-action="delete"]').addEventListener('click', () => deleteFromLibrary(d.id, d.name));
+    libraryList.append(row);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
+  }[c]));
+}
+
+btnLibSave.addEventListener('click', async () => {
+  const name = libraryName.value.trim();
+  if (!name) return;
+  btnLibSave.disabled = true;
+  libSaveStatus.textContent = 'Encrypting...';
+  libSaveStatus.className = '';
+  try {
+    const res = await fetch(API + '/library/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, content: editor.value }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    libSaveStatus.textContent = `✓ Encrypted and saved as "${data.name}"`;
+    libSaveStatus.className = 'status-ok';
+    libraryName.value = '';
+    await refreshLibrary();
+  } catch (e) {
+    libSaveStatus.textContent = 'Error: ' + e.message;
+    libSaveStatus.className = 'status-err';
+    btnLibSave.disabled = false;
+  }
+});
+
+async function loadFromLibrary(id, displayName) {
+  if (editor.value.trim() && !confirm(
+    `Replace the current draft with "${displayName}"?\n\n` +
+    `Your current draft is auto-saved in localStorage and will be overwritten. ` +
+    `Save it first if you want to keep both.`)) return;
+  try {
+    const res  = await fetch(API + `/library/${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    editor.value = data.content;
+    editor.setSelectionRange(0, 0);
+    currentFilename = id + '.md';
+    localStorage.setItem('vox:filename', currentFilename);
+    localStorage.setItem('vox:draft', data.content);
+    brand.classList.remove('unsaved');
+    updateWordCount();
+    setStatus('Loaded from library: ' + displayName);
+    libraryDlg.close();
+  } catch (e) {
+    alert('Load failed: ' + e.message);
+  }
+}
+
+async function deleteFromLibrary(id, displayName) {
+  if (!confirm(`Delete "${displayName}" from your encrypted library?\nThis cannot be undone.`)) return;
+  try {
+    const res = await fetch(API + `/library/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await refreshLibrary();
+  } catch (e) {
+    alert('Delete failed: ' + e.message);
+  }
+}
+
+// Keep Save button enabled state in sync as the editor changes
+editor.addEventListener('input', () => {
+  if (libraryDlg.open) {
+    btnLibSave.disabled = !libraryName.value.trim() || !editor.value.trim();
+  }
+});
+
 btnSaveVoice.addEventListener('click', async () => {
   const file = voiceFileIn.files[0];
   const name = voiceNameIn.value.trim();
   if (!file || !name) return;
 
   btnSaveVoice.disabled = true;
-  voiceAddStat.textContent = 'Uploading and transcribing… (this may take 30–60 s on first use)';
+  voiceAddStat.textContent = 'Uploading and processing… (this may take 30–60 s on first use)';
   voiceAddStat.className = '';
 
   const form = new FormData();
@@ -562,7 +1525,7 @@ btnSaveVoice.addEventListener('click', async () => {
   form.append('name', name);
 
   try {
-    const res  = await fetch('/voice/add', { method: 'POST', body: form });
+    const res  = await fetch(API + '/voice/add', { method: 'POST', body: form });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
@@ -635,30 +1598,68 @@ function findStartUnit(units, cursorPos) {
 }
 
 // ── Audio helpers ─────────────────────────────────────────────────────────────
+let audioGain = null;
 async function ensureCtx() {
-  if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContext();
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new AudioContext();
+    audioGain = audioCtx.createGain();
+    audioGain.gain.value = currentVolume();
+    audioGain.connect(audioCtx.destination);
+  }
   if (audioCtx.state === 'suspended') await audioCtx.resume();
 }
 
-async function fetchTTS(text, voice) {
-  const res = await fetch('/tts', {
+function currentVolume() {
+  const v = parseFloat(volumeInput.value);
+  return Number.isFinite(v) ? Math.max(0, Math.min(1, v / 100)) : 0.8;
+}
+
+// Convert the slider value into the "+X%" rate string the server expects.
+function speedToRateString(mult) {
+  const pct = Math.round((mult - 1.0) * 100);
+  return (pct >= 0 ? '+' : '') + pct + '%';
+}
+
+// Allocate desired speed between the TTS engine (server) and the playback
+// element (client). Kokoro synthesizes natively at 0.5–2.0× with no artifacts,
+// so we lean on it first and let HTMLAudioElement's pitch-preserving stretch
+// pick up any leftover. F5 has no native speed param, so the client does it all.
+function splitSpeed(total, isCustomVoice) {
+  if (isCustomVoice) return { serverMult: 1.0, clientMult: total };
+  const serverMult = Math.max(0.5, Math.min(2.0, total));
+  return { serverMult, clientMult: total / serverMult };
+}
+
+// Convert base64 WAV → blob URL the <audio> element can play. Caller revokes.
+function b64ToBlobUrl(b64) {
+  const raw = atob(b64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
+}
+
+async function fetchTTS(text, voice, totalSpeed) {
+  const isCustom = voice.startsWith('custom:');
+  const { serverMult } = splitSpeed(totalSpeed != null ? totalSpeed : getSpeedMult(), isCustom);
+  const res = await fetch(API + '/tts', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ text, voice, rate: '+0%' }),
+    body:    JSON.stringify({ text, voice, rate: speedToRateString(serverMult) }),
   });
   if (!res.ok) throw new Error(`TTS failed (${res.status})`);
   return res.json();
 }
 
-async function decodeAudio(b64) {
-  const raw = atob(b64), bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  return audioCtx.decodeAudioData(bytes.buffer);
-}
-
 // ── Word / paragraph highlighting ─────────────────────────────────────────────
 function startHighlights(words, paraText, paraStart, audioStartTime, speedMult) {
   if (rafId) cancelAnimationFrame(rafId);
+
+  // Reader mode: paragraph-level (text-match) highlight only. Word-level
+  // highlighting in rendered HTML is deferred to v1.1.
+  if (document.body.classList.contains('mode-read')) {
+    highlightInReader(paraText);
+    return;
+  }
 
   if (words.length === 0) {
     // Custom voice: highlight whole sentence
@@ -727,10 +1728,12 @@ async function playFrom(paras, startIdx) {
   const myGen = ++playGen;
   const stale = () => myGen !== playGen || stopSignal;
 
-  let currentFetch = fetchTTS(paras[startIdx].text, voiceSel.value);
+  // Pre-fetch first sentence at the slider's current speed.
+  let currentFetch = fetchTTS(paras[startIdx].text, voiceSel.value, getSpeedMult());
 
   for (let i = startIdx; i < paras.length; i++) {
     if (stale()) break;
+    currentSentenceIdx = i;
 
     const voice    = voiceSel.value;
     const isCustom = voice.startsWith('custom:');
@@ -742,38 +1745,75 @@ async function playFrom(paras, startIdx) {
 
     let data;
     try { data = await currentFetch; }
-    catch (e) { if (!stale()) setStatus('Error: ' + e.message); break; }
+    catch (e) {
+      console.warn(`TTS failed on sentence ${i + 1}:`, e.message, '— skipping');
+      if (i === startIdx) showError(`TTS request failed on sentence ${i + 1}: ${e.message}`);
+      if (!stale()) setStatus(`Sentence ${i + 1} failed — skipping…`);
+      currentFetch = (i + 1 < paras.length && !stale())
+        ? fetchTTS(paras[i + 1].text, voiceSel.value, getSpeedMult()) : null;
+      continue;
+    }
     if (stale()) break;
 
-    const buffer = await decodeAudio(data.audio);
-    if (stale()) break;
+    if (!data.audio) {
+      console.warn(`Empty audio for sentence ${i + 1} — skipping`);
+      if (i === startIdx) showError(`Server returned empty audio for sentence ${i + 1} — voice may not be installed or text was unspeakable.`);
+      currentFetch = (i + 1 < paras.length && !stale())
+        ? fetchTTS(paras[i + 1].text, voiceSel.value, getSpeedMult()) : null;
+      continue;
+    }
 
     while (isPaused && !stale()) await sleep(80);
     if (stale()) break;
 
-    await ensureCtx();
-    if (stale()) break;
-
-    const speedMult = getSpeedMult();
-
-    // Kick off next sentence fetch as soon as current starts playing so GPU/network
-    // generation overlaps with playback — reduces the gap between sentences.
+    // Pre-fetch next sentence at the *current* slider value so mid-playback
+    // changes take effect on the sentence after this one.
     currentFetch = (i + 1 < paras.length && !stale())
-      ? fetchTTS(paras[i + 1].text, voiceSel.value)
-      : null;
+      ? fetchTTS(paras[i + 1].text, voiceSel.value, getSpeedMult()) : null;
+
+    // The slider's current value is the desired *total* speed. The server
+    // already handled the Kokoro-native portion (serverMult); the client
+    // makes up the rest with HTMLAudioElement's pitch-preserving stretch.
+    const totalSpeed     = getSpeedMult();
+    const { clientMult } = splitSpeed(totalSpeed, isCustom);
+    const blobUrl        = b64ToBlobUrl(data.audio);
+    const el             = new Audio(blobUrl);
+    el.preservesPitch       = true;   // standards
+    el.mozPreservesPitch    = true;   // older Firefox
+    el.webkitPreservesPitch = true;   // older Safari/Chrome
+    el.playbackRate         = clientMult;
+    el.volume               = currentVolume();
+    audioEl                 = el;
 
     await new Promise(resolve => {
-      audioSource = audioCtx.createBufferSource();
-      audioSource.buffer = buffer;
-      audioSource.connect(audioCtx.destination);
-      audioSource.playbackRate.value = speedMult;
-      audioSource.onended = resolve;
-      startHighlights(data.words, paras[i].text, paras[i].start, audioCtx.currentTime, speedMult);
-      audioSource.start();
+      let done = false;
+      const finish = () => {
+        if (done) return; done = true;
+        try { URL.revokeObjectURL(blobUrl); } catch (_) {}
+        resolve();
+      };
+      el.onended = finish;
+      el.onerror = () => {
+        if (i === startIdx) showError(`Audio playback failed on sentence ${i + 1}.`);
+        finish();
+      };
+      el.onplay = () => {
+        // Audio is producing sound — any stale banner from an earlier
+        // transient failure is no longer relevant.
+        hideError();
+        // Mirror old startHighlights timing semantics; words array is empty
+        // for both Kokoro and F5 paths, so this just paints the sentence.
+        startHighlights(data.words || [], paras[i].text, paras[i].start, 0, clientMult);
+      };
+      el.play().catch(err => {
+        if (i === startIdx) showError(`Browser blocked playback: ${err.message}`);
+        finish();
+      });
     });
+
+    if (audioEl === el) audioEl = null;
   }
 
-  // Only the current generation should call cleanup — not a superseded instance
   if (myGen === playGen) cleanup();
 }
 
@@ -790,14 +1830,23 @@ function cleanup() {
   isPlaying = isPaused = stopSignal = false;
   if (rafId)       { cancelAnimationFrame(rafId); rafId = null; }
   if (audioSource) { try { audioSource.stop(); } catch (_) {} audioSource = null; }
+  if (audioEl) {
+    try { audioEl.pause(); } catch (_) {}
+    try { if (audioEl.src) URL.revokeObjectURL(audioEl.src); } catch (_) {}
+    audioEl = null;
+  }
+  readerInner.querySelectorAll('.lector-sentence.lector-active')
+    .forEach(el => el.classList.remove('lector-active'));
   setControls(false);
   btnPause.textContent = '⏸  Pause';
   setProgress(0);
   setStatus('Stopped');
+  if (typeof updateHints === 'function') updateHints();
 }
 
 // ── Button handlers ───────────────────────────────────────────────────────────
 btnPlay.addEventListener('click', async () => {
+  hideError();
   const text = editor.value;
   if (!text.trim()) { setStatus('No text to read.'); return; }
 
@@ -808,10 +1857,15 @@ btnPlay.addEventListener('click', async () => {
 
   await ensureCtx();
   const paras    = parseUnits(text);
-  const startIdx = findStartUnit(paras, editor.selectionStart);
+  const inReadMode = document.body.classList.contains('mode-read');
+  // In Read mode, prefer the click-anchored sentence; fall back to editor cursor.
+  const startIdx = (inReadMode && readerAnchorIdx !== null && readerAnchorIdx < paras.length)
+    ? readerAnchorIdx
+    : findStartUnit(paras, editor.selectionStart);
 
   stopSignal = false; isPlaying = true; isPaused = false;
   setControls(true);
+  updateHints();
   playFrom(paras, startIdx);
 });
 
@@ -819,15 +1873,16 @@ btnPause.addEventListener('click', async () => {
   if (!isPlaying) return;
   if (!isPaused) {
     isPaused = true;
-    if (audioCtx) await audioCtx.suspend();
+    if (audioEl) { try { audioEl.pause(); } catch (_) {} }
     btnPause.textContent = '▶  Resume';
     setStatus('Paused');
   } else {
     isPaused = false;
-    if (audioCtx) await audioCtx.resume();
+    if (audioEl) { try { await audioEl.play(); } catch (_) {} }
     btnPause.textContent = '⏸  Pause';
     setStatus('Playing…');
   }
+  updateHints();
 });
 
 btnStop.addEventListener('click', () => {
