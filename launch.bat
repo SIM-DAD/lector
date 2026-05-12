@@ -7,8 +7,8 @@ echo [%date% %time%] Launch started > "%LOG%"
 echo Working dir: %CD% >> "%LOG%"
 
 :: ── Keep .venv on a local drive to avoid syncing 3 GB to Google Drive ─────────
-:: Store in %LOCALAPPDATA%\ScriVocalis\.venv so it survives project moves.
-set VENV=%LOCALAPPDATA%\ScriVocalis\.venv
+:: Store in %LOCALAPPDATA%\Lector\.venv so it survives project moves.
+set VENV=%LOCALAPPDATA%\Lector\.venv
 echo Venv: %VENV% >> "%LOG%"
 
 :: ── Is the venv ready? ────────────────────────────────────────────────────────
@@ -69,6 +69,19 @@ echo [%date% %time%] Launching server >> "%LOG%"
 echo Starting server at http://127.0.0.1:7860
 echo Log: %LOG%
 echo.
+
+:: Skip TTS preload at startup (workaround for a torch+CUDA initialization
+:: crash that fires when Kokoro/F5 load inside the uvicorn startup thread,
+:: but does not fire when they load inside asyncio.to_thread workers from
+:: an HTTP /tts handler). First /tts call pays a ~15s lazy-load latency;
+:: subsequent calls are warm.
+set LECTOR_SKIP_TTS_PRELOAD=1
+
+:: Tell server.py we're inside the Tauri shell, not raw dev. Routes
+:: voices/library/cache through platformdirs (install dir is read-only on
+:: Program Files) and suppresses the auto-opened browser tab (Tauri webview
+:: is the UI).
+set LECTOR_PRODUCTION=1
 
 "%VENV%\Scripts\python.exe" server.py >> "%LOG%" 2>&1
 set ERR=%errorlevel%

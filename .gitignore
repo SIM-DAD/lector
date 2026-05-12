@@ -10,10 +10,29 @@ dist/
 # App data (user-specific, not committed)
 voices/*.wav
 voices/*.ref.txt
+voices/*.pkf
 audio_cache/*.wav
 audio_cache/*.mp3
+library/*.age
+library/.tmp/
 launch_log.txt
 *.log
+
+# Tauri shell — Rust build outputs and auto-generated schemas (large + reproducible)
+src-tauri/target/
+src-tauri/gen/
+
+# Retired PyInstaller sidecar binaries (multi-GB, replaced by launch-silent.vbs 2026-04-25)
+src-tauri/binaries/
+
+# Tauri / Vite frontend build artifacts
+node_modules/
+dist-tauri/
+dist-ssr/
+*.local
+
+# librosa cache (regenerable on next launch)
+librosa-cache/
 
 # Environment
 .env

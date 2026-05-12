@@ -1,0 +1,20 @@
+[package]
+name = "lector"
+version = "1.0.0"
+description = "Distraction-free manuscript editor with read-aloud and voice cloning"
+authors = ["SIM DAD LLC <hello@simdadllc.com>"]
+edition = "2021"
+
+[lib]
+name = "lector_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-shell = "2"
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
