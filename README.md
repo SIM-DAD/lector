@@ -4,7 +4,7 @@
 
 **[uselector.app](https://uselector.app)** · [SIM DAD LLC](https://simdadllc.com)
 
-Lector is a local web app for researchers and writers who want to edit Markdown manuscripts and hear them read back — in any voice, including a clone of their own.
+Lector is a standalone desktop app (Tauri-wrapped) for researchers and writers who want to edit Markdown manuscripts and hear them read back — in any voice, including a clone of their own. Customers see a native window; the FastAPI server inside is internal IPC, never exposed.
 
 ---
 
@@ -12,8 +12,8 @@ Lector is a local web app for researchers and writers who want to edit Markdown 
 
 - **Markdown editor** — clean, distraction-free writing surface with word-by-word TTS highlighting
 - **Read aloud** — sentence-level streaming TTS so playback starts immediately
-- **Voice cloning** — clone any voice from a short audio sample using [XTTS-v2](https://github.com/coqui-ai/TTS) (no training required)
-- **Built-in voices** — 10 Edge TTS neural voices (US, UK, AU); no GPU needed
+- **Voice cloning** — clone any voice from a 5-15 second audio sample using [F5-TTS](https://huggingface.co/SWivid/F5-TTS) (no training required)
+- **Built-in voices** — 12 Kokoro neural voices (US, UK); fully offline, no GPU needed
 - **Citation stripping** — numeric `[1]` and author–year `[Smith et al., 2020]` references are removed before reading
 - **Auto-save** — draft persists in the browser between sessions; export as `.md` any time
 - **Dark mode** — persists across sessions
@@ -24,9 +24,9 @@ Lector is a local web app for researchers and writers who want to edit Markdown 
 
 | | |
 |---|---|
-| OS | Windows 10 / 11 |
+| OS | Windows 10 / 11, macOS (coming soon) |
 | Python | 3.12 |
-| GPU | NVIDIA with CUDA 12.4 — required for voice cloning only; built-in voices work on CPU |
+| GPU | Optional — NVIDIA with CUDA improves voice cloning speed; all features work on CPU |
 
 ---
 
@@ -38,9 +38,9 @@ Lector is a local web app for researchers and writers who want to edit Markdown 
 | Windows (no console) | Double-click **`launch-silent.vbs`** |
 | Linux / macOS | `bash launch.sh` |
 
-The first run creates a virtual environment and installs all dependencies (~3 GB including PyTorch and XTTS-v2). Subsequent launches take a few seconds. The browser opens automatically to `http://127.0.0.1:7860`.
+The first run creates a virtual environment and installs all dependencies (~3 GB including PyTorch). Subsequent launches take a few seconds. The browser opens automatically to `http://127.0.0.1:7860`.
 
-> **macOS / Linux without NVIDIA GPU:** Built-in Edge TTS voices work normally. Voice cloning requires an NVIDIA GPU with CUDA 12.4.
+> **macOS / Linux:** Built-in Kokoro voices work on any hardware. Voice cloning uses F5-TTS and works on CPU (slower) or GPU (recommended).
 
 ### Manual install
 
@@ -69,7 +69,7 @@ python server.py
 1. **Write or open** — paste your text directly, or open a `.docx` / `.md` file with the **Open** button
 2. **Place cursor** — click anywhere in the text to start reading from that point
 3. **Play** — press **Play**; the current sentence is highlighted word-by-word as it plays
-4. **Clone a voice** — click **+ Voices**, upload a 10–20 s WAV/MP3, give it a name; the first use downloads ~750 MB of model weights
+4. **Clone a voice** — click **+ Voices**, upload a 5–15 s WAV/MP3, give it a name; the first use downloads ~1.8 GB of model weights
 5. **Export** — click **Save .md** or press `Ctrl+S` to download your draft
 
 ### Keyboard shortcuts
@@ -90,7 +90,6 @@ static/
   index.html         Single-page frontend (vanilla JS, no framework)
 voices/              Custom voice reference audio — gitignored, created at runtime
 audio_cache/         Generated audio cache — gitignored, created at runtime
-pkuseg_stub/         Local stub required by XTTS-v2
 launch.bat           One-click Windows setup and launch
 launch-silent.vbs    Windows launch without a visible console window
 launch.sh            Linux / macOS setup and launch
