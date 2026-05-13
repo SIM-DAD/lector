@@ -166,7 +166,7 @@
     <div class="cheats-grid">
 
       <div class="cheats-section-label">Playback</div>
-      <kbd>Shift</kbd>+<kbd>Space</kbd>      <div class="cheats-desc">Play / Pause (works while typing)</div>
+      <kbd>Shift</kbd>+<kbd>Space</kbd>      <div class="cheats-desc">Play / Pause (works while typing). Pausing mid-sentence rewinds one sentence so resume replays it in context.</div>
       <kbd>Space</kbd>                       <div class="cheats-desc">Play / Pause (when editor isn't focused)</div>
       <kbd>Esc</kbd>                         <div class="cheats-desc">Stop</div>
       <kbd>Alt</kbd>+<kbd>,</kbd>            <div class="cheats-desc">Previous sentence</div>
@@ -334,6 +334,11 @@
           When the editor isn't focused (e.g. in Read mode), plain <kbd>Space</kbd> also
           toggles Play / Pause.
         </p>
+        <p class="hint-text" style="line-height:1.65;margin-bottom:6px">
+          Pausing mid-sentence rewinds one sentence on resume so you keep the
+          spoken context for the line you were about to edit. Pausing at a
+          sentence boundary resumes normally.
+        </p>
       </div>
       <div>
         <div class="section-label">Marks</div>
@@ -457,6 +462,9 @@ let currentFilename = 'manuscript.md';
 // The sentence currently being played (or the last one played, after pause/stop).
 // Read by the keyboard step-back/forward shortcuts and "mark current sentence".
 let currentSentenceIdx = 0;
+// Set true when pause fires mid-sentence; resume then replays the prior sentence
+// for editing context instead of finishing the cut-off one.
+let pendingBackstep = false;
 
 // ── Persistence: restore saved content ───────────────────────────────────────
 (function restoreDraft() {
@@ -754,6 +762,7 @@ async function jumpToSentence(targetIdx) {
   const idx = Math.max(0, Math.min(paras.length - 1, targetIdx));
   currentSentenceIdx = idx;
   stopSignal = false; isPlaying = true; isPaused = false;
+  pendingBackstep = false;
   setControls(true);
   updateHints();
   playFrom(paras, idx);
@@ -1828,6 +1837,7 @@ function setControls(on) {
 function cleanup() {
   playGen++;  // invalidate any in-flight playFrom instance
   isPlaying = isPaused = stopSignal = false;
+  pendingBackstep = false;
   if (rafId)       { cancelAnimationFrame(rafId); rafId = null; }
   if (audioSource) { try { audioSource.stop(); } catch (_) {} audioSource = null; }
   if (audioEl) {
@@ -1864,6 +1874,7 @@ btnPlay.addEventListener('click', async () => {
     : findStartUnit(paras, editor.selectionStart);
 
   stopSignal = false; isPlaying = true; isPaused = false;
+  pendingBackstep = false;
   setControls(true);
   updateHints();
   playFrom(paras, startIdx);
@@ -1874,14 +1885,29 @@ btnPause.addEventListener('click', async () => {
   if (!isPaused) {
     isPaused = true;
     if (audioEl) { try { audioEl.pause(); } catch (_) {} }
+    // Mid-sentence pause queues a rewind: on resume, replay the prior sentence
+    // so editors regain spoken context for the cut-off one. Sentence-boundary
+    // pauses (audioEl ended or not yet playing) resume normally.
+    pendingBackstep = !!(audioEl
+      && audioEl.currentTime > 0.2
+      && !audioEl.ended
+      && currentSentenceIdx > 0);
     btnPause.textContent = '▶  Resume';
     setStatus('Paused');
-  } else {
-    isPaused = false;
-    if (audioEl) { try { await audioEl.play(); } catch (_) {} }
-    btnPause.textContent = '⏸  Pause';
-    setStatus('Playing…');
+    updateHints();
+    return;
   }
+  if (pendingBackstep) {
+    pendingBackstep = false;
+    btnPause.textContent = '⏸  Pause';
+    // jumpToSentence resets isPaused, sets controls, and kicks a fresh playFrom.
+    await jumpToSentence(currentSentenceIdx - 1);
+    return;
+  }
+  isPaused = false;
+  if (audioEl) { try { await audioEl.play(); } catch (_) {} }
+  btnPause.textContent = '⏸  Pause';
+  setStatus('Playing…');
   updateHints();
 });
 
