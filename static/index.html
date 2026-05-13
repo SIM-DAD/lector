@@ -484,6 +484,9 @@ let pendingBackstep = false;
     volumeLabel.textContent = `${savedVolume}%`;
   }
   updateWordCount();
+  // Defer position-restore past module evaluation so it can safely touch
+  // readerAnchorIdx (declared further down).
+  setTimeout(restorePosition, 0);
 })();
 
 // ── Auto-save ─────────────────────────────────────────────────────────────────
@@ -497,6 +500,50 @@ editor.addEventListener('input', () => {
   }, 500);
   updateWordCount();
 });
+
+// ── Position memory ───────────────────────────────────────────────────────────
+// Persists the last-played sentence per document so customers can close the
+// app, reopen tomorrow, and pick up the line they were on. Keyed by
+// currentFilename (library docs land under "{id}.md", scratch under
+// "manuscript.md"). Restored sentence reanchors by snippet match first, falling
+// back to the saved index when the text has shifted under editing.
+function positionKey() { return 'lector:position:' + (currentFilename || 'manuscript.md'); }
+function savePosition(idx, text) {
+  if (!text || idx < 0) return;
+  try {
+    localStorage.setItem(positionKey(), JSON.stringify({
+      snippet: String(text).slice(0, 80),
+      idx,
+      ts: Date.now(),
+    }));
+  } catch (_) { /* quota or disabled; silently skip */ }
+}
+function restorePosition() {
+  let raw;
+  try { raw = localStorage.getItem(positionKey()); } catch (_) { return; }
+  if (!raw) return;
+  let saved;
+  try { saved = JSON.parse(raw); } catch (_) { return; }
+  if (!saved || typeof saved.idx !== 'number') return;
+  const paras = parseUnits(editor.value);
+  if (!paras.length) return;
+  // Snippet match (robust to surrounding edits); fall back to saved idx clamped.
+  let foundIdx = -1;
+  if (saved.snippet) {
+    foundIdx = paras.findIndex(p => p.text && p.text.startsWith(saved.snippet));
+  }
+  if (foundIdx < 0) foundIdx = Math.max(0, Math.min(paras.length - 1, saved.idx));
+  if (foundIdx <= 0) return; // sentence 0 is the default start; nothing to restore.
+  // Move the editor cursor so the next Play picks up here via findStartUnit.
+  // Use the existing readerAnchorIdx pathway too so Read-mode users see the
+  // parchment-gold outline ring on the resume sentence.
+  try {
+    editor.setSelectionRange(paras[foundIdx].start, paras[foundIdx].start);
+  } catch (_) {}
+  readerAnchorIdx = foundIdx;
+  currentSentenceIdx = foundIdx;
+  setStatus(`Resume position: sentence ${foundIdx + 1} of ${paras.length}. Press Play to continue.`);
+}
 
 // ── Word count ────────────────────────────────────────────────────────────────
 function updateWordCount() {
@@ -1497,6 +1544,9 @@ async function loadFromLibrary(id, displayName) {
     updateWordCount();
     setStatus('Loaded from library: ' + displayName);
     libraryDlg.close();
+    // If we've played this doc before, jump the cursor + reader anchor to where
+    // playback left off. Quietly no-ops if there's no saved position.
+    restorePosition();
   } catch (e) {
     alert('Load failed: ' + e.message);
   }
@@ -1743,6 +1793,7 @@ async function playFrom(paras, startIdx) {
   for (let i = startIdx; i < paras.length; i++) {
     if (stale()) break;
     currentSentenceIdx = i;
+    savePosition(i, paras[i].text);
 
     const voice    = voiceSel.value;
     const isCustom = voice.startsWith('custom:');
