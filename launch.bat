@@ -83,7 +83,7 @@ set LECTOR_SKIP_TTS_PRELOAD=1
 :: is the UI).
 set LECTOR_PRODUCTION=1
 
-"%VENV%\Scripts\python.exe" server.py >> "%LOG%" 2>&1
+"%VENV%\Scripts\pythonw.exe" server.py >> "%LOG%" 2>&1
 set ERR=%errorlevel%
 echo [%date% %time%] Server exited, code %ERR% >> "%LOG%"
 

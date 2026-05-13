@@ -38,9 +38,26 @@
       "icons/icon.ico"
     ],
     "externalBin": [],
+    "resources": {
+      "../server.py": "server.py",
+      "../crypto.py": "crypto.py",
+      "../library_store.py": "library_store.py",
+      "../license_manager.py": "license_manager.py",
+      "../text_parser.py": "text_parser.py",
+      "../requirements.txt": "requirements.txt",
+      "../launch.bat": "launch.bat",
+      "../launch-silent.vbs": "launch-silent.vbs",
+      "../static": "static",
+      "../vendor": "vendor"
+    },
+    "licenseFile": "../LICENSE",
     "windows": {
       "wix": {
         "language": "en-US"
+      },
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "perMachine"
       }
     },
     "macOS": {
