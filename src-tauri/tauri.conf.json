@@ -66,13 +66,7 @@
   },
   "plugins": {
     "shell": {
-      "open": true,
-      "scope": {
-        "sidecar": true
-      }
-    },
-    "notification": {
-      "all": true
+      "open": true
     }
   }
 }
