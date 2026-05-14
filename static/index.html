@@ -382,7 +382,13 @@
 <script>
 // ── API base URL ─────────────────────────────────────────────────────────────
 // In dev/browser mode: empty (same origin). In Tauri: sidecar port.
-const API = window.__TAURI__ ? 'http://127.0.0.1:7860' : '';
+// Lector always runs against a local FastAPI server bound to 127.0.0.1:7860.
+// Hardcoded because Tauri 2.x doesn't populate `window.__TAURI__` by default
+// (the API is split across @tauri-apps/* modules now), so the previous Tauri 1.x
+// detection short-circuited to `API = ''` and all fetches hit the Tauri custom
+// protocol origin instead of the FastAPI server — leaving the splash polling
+// /status forever.
+const API = 'http://127.0.0.1:7860';
 
 // Configure marked: GFM tables/strikethrough on, but no <br> on single newlines
 // (one-line paragraphs are a thing in prose) and no syntax highlighter shim.
