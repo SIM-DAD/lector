@@ -2,7 +2,14 @@
 setlocal
 cd /d "%~dp0"
 
-set LOG=%~dp0launch_log.txt
+:: ── Log path lives in %LOCALAPPDATA%\Lector\ ─────────────────────────────────
+:: %~dp0 resolves to the install dir, which on a perMachine NSIS install is
+:: C:\Program Files\Lector\ — read-only for non-admin users. Writing the log
+:: there silently failed after install and left customers with no diagnostic
+:: trail when first launch broke. %LOCALAPPDATA% is per-user writable and is
+:: where the venv lives anyway, so co-locate the log.
+if not exist "%LOCALAPPDATA%\Lector" mkdir "%LOCALAPPDATA%\Lector" 2>nul
+set LOG=%LOCALAPPDATA%\Lector\launch_log.txt
 echo [%date% %time%] Launch started > "%LOG%"
 echo Working dir: %CD% >> "%LOG%"
 
