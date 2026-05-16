@@ -56,7 +56,35 @@ body {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* never wrap; hamburger absorbs overflow below breakpoint */
+  position: relative; /* anchor for narrow-width dropdown panel */
+}
+
+/* Action buttons grouped so they can collapse into a dropdown at narrow widths.
+   Above the breakpoint the wrapper is a transparent flex row that participates
+   in the parent toolbar layout identically to the previous inline buttons. */
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; /* keep buttons readable above breakpoint */
+}
+
+/* Hamburger toggle: hidden by default, revealed by the narrow-width query.
+   flex-shrink: 0 is critical — without it, the toggle gets pushed off the
+   viewport right edge when voice/speed/volume can't shrink past their slider
+   widths. Caught in dev 2026-05-15 at ~590px window width. */
+.menu-toggle {
+  display: none;
+  font-size: 18px;
+  padding: 4px 11px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.menu-toggle[aria-expanded="true"] {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
 }
 
 .brand {
@@ -672,6 +700,72 @@ dialog::backdrop { background: rgba(0,0,0,.4); backdrop-filter: blur(2px); }
   background: var(--surface);
   color: var(--text);
   white-space: nowrap;
+}
+
+/* ── Narrow-width toolbar collapse (Bootstrap-style hamburger) ─────────────
+   8 right-side action buttons stop fitting inline somewhere around 1280 px
+   (varies a little by voice-name length). Below the breakpoint, hide the
+   inline action group and reveal a hamburger toggle that drops the same
+   buttons into an absolute-positioned panel below the toolbar.
+
+   Breakpoint chosen above natural wrap point so the toolbar never wraps to
+   row 2; either everything fits inline (wide window) or hamburger holds
+   the actions (narrow window). No in-between wrap state. */
+@media (max-width: 1280px) {
+  #toolbar {
+    flex-wrap: nowrap;
+  }
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+  .toolbar-actions {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 12px;
+    margin-top: 6px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 50;
+    min-width: 180px;
+  }
+  #toolbar.menu-open .toolbar-actions {
+    display: flex;
+  }
+  /* Inside the dropdown panel, buttons should be flush-left + full-width
+     so the menu reads as a vertical list, not a wrapped row. */
+  #toolbar.menu-open .toolbar-actions .tbtn {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+}
+
+/* Compaction layer between hamburger breakpoint (1280) and minWidth (880).
+   Shrinks voice selector + sliders so the always-visible row (brand, mode,
+   voice, speed, volume, spacer, hamburger) fits at the 880px floor. */
+@media (max-width: 1024px) {
+  #voice-select { min-width: 120px; max-width: 160px; }
+  #rate, #volume { width: 70px; }
+  .speed-wrap { font-size: 13px; gap: 4px; }
+}
+
+/* At the minWidth floor, drop the "Speed" / "Volume" text labels — sliders
+   alone are still readable (and have aria-labels for screen readers), and
+   shaving ~70px of label text is what makes 880px viable. The numeric
+   values (1×, 80%) stay so users know the level. */
+@media (max-width: 920px) {
+  .slider-text { display: none; }
+  #rate, #volume { width: 60px; }
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────── */

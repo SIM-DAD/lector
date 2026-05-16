@@ -49,6 +49,7 @@ import numpy as np
 import psutil
 import soundfile as sf
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -120,6 +121,21 @@ library_store.cleanup_scratch_dir(LIBRARY_DIR)
 os.environ.setdefault("LIBROSA_DATA_DIR", str(LIBROSA_CACHE_DIR))
 
 app = FastAPI()
+
+# Tauri 2.x loads the frontend from a non-HTTP origin (tauri://localhost on
+# Windows). Fetches to http://127.0.0.1:7860 are cross-origin, so the browser
+# blocks JS from reading the response body unless the server sends CORS
+# headers. Local-only app: allow any origin. Without this, the warmup splash's
+# fetch(API + '/status') call returns 200 at the network layer but r.json()
+# throws, and the splash hangs at 8% forever.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Bundled offline docs (Help link in the toolbar opens /help/). The path is

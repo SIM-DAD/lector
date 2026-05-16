@@ -2,6 +2,15 @@
 setlocal
 cd /d "%~dp0"
 
+:: ── Kill any prior Lector pythonw before starting fresh ──────────────────────
+:: NSIS uninstaller does not terminate running Lector processes. Every
+:: install-test-reinstall cycle would otherwise leave a zombie holding port
+:: 7860 and serving pre-update code, defeating the new install entirely.
+:: Caught after two days of chasing a phantom "splash hangs at 8%" bug in
+:: dev 2026-05-15 where each fresh install loaded the previous attempt's
+:: server.py from memory instead of the patched disk file.
+powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='pythonw.exe' OR Name='python.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match 'server\.py' -and ($_.CommandLine -match 'Lector' -or $_.CommandLine -match 'lector') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+
 :: ── Log path lives in %LOCALAPPDATA%\Lector\ ─────────────────────────────────
 :: %~dp0 resolves to the install dir, which on a perMachine NSIS install is
 :: C:\Program Files\Lector\ — read-only for non-admin users. Writing the log

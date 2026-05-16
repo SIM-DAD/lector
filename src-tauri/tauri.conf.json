@@ -13,8 +13,10 @@
     "windows": [
       {
         "title": "Lector",
-        "width": 960,
-        "height": 720,
+        "width": 1280,
+        "height": 800,
+        "minWidth": 880,
+        "minHeight": 600,
         "resizable": true,
         "fullscreen": false,
         "center": true

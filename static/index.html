@@ -96,34 +96,42 @@
   </select>
 
   <div class="speed-wrap">
-    Speed <input type="range" id="rate" min="0.5" max="2.5" value="1" step="0.25">
+    <span class="slider-text">Speed</span>
+    <input type="range" id="rate" min="0.5" max="2.5" value="1" step="0.25" aria-label="Speed">
     <span id="speed-label">1×</span>
   </div>
 
   <div class="speed-wrap">
-    Volume <input type="range" id="volume" min="0" max="100" value="80" step="5">
+    <span class="slider-text">Volume</span>
+    <input type="range" id="volume" min="0" max="100" value="80" step="5" aria-label="Volume">
     <span id="volume-label">80%</span>
   </div>
 
   <div class="toolbar-spacer"></div>
 
-  <button class="tbtn" id="btn-open-file" aria-label="Open file (.docx or .md)">Open</button>
-  <input type="file" id="file-input" hidden accept=".docx,.md">
+  <button class="tbtn menu-toggle" id="menu-toggle"
+    aria-label="Open menu" aria-controls="toolbar-actions"
+    aria-expanded="false">☰</button>
 
-  <button class="tbtn" id="btn-save" title="Save as Markdown (Ctrl+S)">Save</button>
+  <div class="toolbar-actions" id="toolbar-actions" role="group" aria-label="Document actions">
+    <button class="tbtn" id="btn-open-file" aria-label="Open file (.docx or .md)">Open</button>
+    <input type="file" id="file-input" hidden accept=".docx,.md">
 
-  <button class="tbtn" id="btn-library" title="Encrypted document library" aria-label="Open encrypted library">Library</button>
+    <button class="tbtn" id="btn-save" title="Save as Markdown (Ctrl+S)">Save</button>
 
-  <button class="tbtn" id="btn-marks" title="Marks you've left on this document (Shift+click a sentence in Read mode)" aria-label="Open marks">Marks</button>
+    <button class="tbtn" id="btn-library" title="Encrypted document library" aria-label="Open encrypted library">Library</button>
 
-  <button class="tbtn" id="btn-manage-voices" aria-label="Manage custom voices" title="Manage custom voices">Voices</button>
+    <button class="tbtn" id="btn-marks" title="Marks you've left on this document (Shift+click a sentence in Read mode)" aria-label="Open marks">Marks</button>
 
-  <button class="tbtn" id="btn-open-browser" aria-label="Open Lector in your default browser"
-    title="Open in browser (gives Grammarly + extensions)" hidden>Browser ↗</button>
+    <button class="tbtn" id="btn-manage-voices" aria-label="Manage custom voices" title="Manage custom voices">Voices</button>
 
-  <button class="tbtn" id="btn-help" aria-label="Open Lector help" title="Open Lector help">Help</button>
+    <button class="tbtn" id="btn-open-browser" aria-label="Open Lector in your default browser"
+      title="Open in browser (gives Grammarly + extensions)" hidden>Browser ↗</button>
 
-  <button class="tbtn" id="btn-dark" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+    <button class="tbtn" id="btn-help" aria-label="Open Lector help" title="Open Lector help">Help</button>
+
+    <button class="tbtn" id="btn-dark" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+  </div>
 </div>
 
 <!-- ── Workspace (Editor + Reader; one visible at a time) ──────────────── -->
@@ -740,6 +748,55 @@ const helpDlg = hubDlg;                 // alias to unified hub
 if (btnHelp) {
   btnHelp.addEventListener('click', () => openHub('help'));
 }
+
+// ── Hamburger menu (toolbar collapse at narrow widths) ───────────────────────
+// CSS controls visibility (display: none above 1100px, inline-flex below).
+// JS just toggles the .menu-open class on #toolbar and ARIA expanded state.
+// Closes on: click outside, Esc, or clicking any action button inside.
+(function setupMenuToggle() {
+  const toolbar = document.getElementById('toolbar');
+  const toggle = document.getElementById('menu-toggle');
+  const actions = document.getElementById('toolbar-actions');
+  if (!toolbar || !toggle || !actions) return;
+
+  function setOpen(open) {
+    toolbar.classList.toggle('menu-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function close() { setOpen(false); }
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(!toolbar.classList.contains('menu-open'));
+  });
+
+  // Clicking any action inside should run the action AND close the menu so
+  // the user doesn't have to tap the hamburger again to dismiss.
+  actions.addEventListener('click', (e) => {
+    if (e.target.closest('.tbtn')) close();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!toolbar.classList.contains('menu-open')) return;
+    if (e.target.closest('#toolbar-actions') || e.target.closest('#menu-toggle')) return;
+    close();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && toolbar.classList.contains('menu-open')) {
+      close();
+      toggle.focus();
+    }
+  });
+
+  // If the window is resized back above the breakpoint, ensure the panel
+  // state is reset so toggling-then-resizing doesn't leave .menu-open set
+  // (which would do nothing visible at wide widths but is unclean state).
+  const mq = window.matchMedia('(max-width: 1100px)');
+  const handleMq = () => { if (!mq.matches) close(); };
+  if (mq.addEventListener) mq.addEventListener('change', handleMq);
+  else if (mq.addListener) mq.addListener(handleMq);  // legacy fallback
+})();
 
 // ── Open in browser (Tauri-only; gives customers Grammarly + extensions) ──────
 const btnOpenBrowser = document.getElementById('btn-open-browser');
