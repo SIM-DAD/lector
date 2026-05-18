@@ -8,6 +8,39 @@ import tempfile
 import threading
 from pathlib import Path
 
+# ─── pythonw.exe stdout/stderr safety net ───────────────────────────────────
+# When launch.bat invokes us as `pythonw server.py >> "%LOG%" 2>&1`, cmd's
+# redirect supplies file handles and Python populates sys.stdout/sys.stderr
+# normally — print() works. But pythonw spawned WITHOUT redirected handles
+# (manual invocation, debugger attach, future runner change) sets both to
+# None at startup, and the first unguarded print() raises AttributeError on
+# None.write — silent crash, no traceback to disk. Cheap belt-and-suspenders:
+# point None handles at a server.log so the next launch path change can't
+# regress this silently.
+if sys.stdout is None or sys.stderr is None:
+    try:
+        _log_dir = os.path.join(
+            os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local")),
+            "Lector",
+        )
+        os.makedirs(_log_dir, exist_ok=True)
+        _log_fh = open(
+            os.path.join(_log_dir, "server.log"),
+            "a", buffering=1, encoding="utf-8", errors="replace",
+        )
+        if sys.stdout is None:
+            sys.stdout = _log_fh
+        if sys.stderr is None:
+            sys.stderr = _log_fh
+    except Exception:
+        class _NullWriter:
+            def write(self, _): return 0
+            def flush(self): pass
+        if sys.stdout is None:
+            sys.stdout = _NullWriter()
+        if sys.stderr is None:
+            sys.stderr = _NullWriter()
+
 # ─── platformdirs Windows ctypes workaround ─────────────────────────────────
 # Some Windows + Python 3.12 + platformdirs combinations segfault inside
 # `shell32.SHGetKnownFolderPath` (ctypes argtype mismatch reading address

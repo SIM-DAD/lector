@@ -25,6 +25,11 @@ src-tauri/gen/
 # Retired PyInstaller sidecar binaries (multi-GB, replaced by launch-silent.vbs 2026-04-25)
 src-tauri/binaries/
 
+# Bundled CPython runtime (python-build-standalone, ~150 MB). Reproducible via
+# runtime/fetch-python.ps1 — pinned tarball, not committed.
+runtime/python/
+runtime/*.tar.gz
+
 # Tauri / Vite frontend build artifacts
 node_modules/
 dist-tauri/

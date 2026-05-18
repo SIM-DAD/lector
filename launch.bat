@@ -2,85 +2,75 @@
 setlocal
 cd /d "%~dp0"
 
-:: ── Kill any prior Lector pythonw before starting fresh ──────────────────────
-:: NSIS uninstaller does not terminate running Lector processes. Every
-:: install-test-reinstall cycle would otherwise leave a zombie holding port
-:: 7860 and serving pre-update code, defeating the new install entirely.
-:: Caught after two days of chasing a phantom "splash hangs at 8%" bug in
-:: dev 2026-05-15 where each fresh install loaded the previous attempt's
-:: server.py from memory instead of the patched disk file.
+:: ──────────────────────────────────────────────────────────────────────────────
+:: Lector launch script
+::
+:: All Python dependency installation moved to NSIS install-time (see
+:: src-tauri/installer-hooks.nsh, commit landing 2026-05-16). This script no
+:: longer creates a venv, no longer requires system Python, and no longer
+:: downloads anything. Bundled CPython lives at %~dp0\python\ — populated by
+:: the installer's POSTINSTALL hook. First launch is now O(seconds), not
+:: O(tens of minutes).
+::
+:: Why the change: campus-laptop clean test 2026-05-16 caught launch.bat dying
+:: at `py -3.12 not found`. Customer machines do not have Python. The 2026-04-25
+:: pivot scoped this fix but only the Python sources got bundled; the runtime
+:: + deps install never followed. Resolved now.
+:: ──────────────────────────────────────────────────────────────────────────────
+
+:: ── Kill any prior Lector pythonw before starting fresh ───────────────────────
+:: NSIS uninstaller does not always terminate running Lector processes during
+:: a reinstall, and a stale pythonw holding port 7860 with the prior version's
+:: in-memory server.py defeats the new install entirely. The NSIS PREUNINSTALL
+:: hook also does this for the install path; we keep it here so direct relaunch
+:: (without reinstall) still self-heals.
 powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='pythonw.exe' OR Name='python.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match 'server\.py' -and ($_.CommandLine -match 'Lector' -or $_.CommandLine -match 'lector') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 
-:: ── Log path lives in %LOCALAPPDATA%\Lector\ ─────────────────────────────────
-:: %~dp0 resolves to the install dir, which on a perMachine NSIS install is
-:: C:\Program Files\Lector\ — read-only for non-admin users. Writing the log
-:: there silently failed after install and left customers with no diagnostic
-:: trail when first launch broke. %LOCALAPPDATA% is per-user writable and is
-:: where the venv lives anyway, so co-locate the log.
+:: ── Log path lives in %LOCALAPPDATA%\Lector\ ──────────────────────────────────
+:: %~dp0 resolves to the install dir (C:\Program Files\Lector\ on perMachine),
+:: which is read-only for non-admin users. %LOCALAPPDATA% is per-user writable.
 if not exist "%LOCALAPPDATA%\Lector" mkdir "%LOCALAPPDATA%\Lector" 2>nul
-set LOG=%LOCALAPPDATA%\Lector\launch_log.txt
+set "LOG=%LOCALAPPDATA%\Lector\launch_log.txt"
 echo [%date% %time%] Launch started > "%LOG%"
 echo Working dir: %CD% >> "%LOG%"
 
-:: ── Keep .venv on a local drive to avoid syncing 3 GB to Google Drive ─────────
-:: Store in %LOCALAPPDATA%\Lector\.venv so it survives project moves.
-set VENV=%LOCALAPPDATA%\Lector\.venv
-echo Venv: %VENV% >> "%LOG%"
+:: ── Resolve bundled Python ────────────────────────────────────────────────────
+set "PY=%~dp0python\pythonw.exe"
+echo Python: %PY% >> "%LOG%"
 
-:: ── Is the venv ready? ────────────────────────────────────────────────────────
-if exist "%VENV%\Scripts\python.exe" (
-    echo [OK] venv found, skipping setup >> "%LOG%"
-    goto :activate
-)
-
-:: ── Full setup ────────────────────────────────────────────────────────────────
-echo [SETUP] venv not found, running first-time setup >> "%LOG%"
-
-echo [1/4] Creating virtual environment (Python 3.12)...
-py -3.12 -m venv "%VENV%" >> "%LOG%" 2>&1
-if errorlevel 1 (
-    echo ERROR: py -3.12 failed >> "%LOG%"
+if not exist "%PY%" (
+    echo ERROR: bundled Python missing at %PY% >> "%LOG%"
     echo.
-    echo ERROR: Python 3.12 not found.
-    echo Install it from: https://www.python.org/downloads/release/python-3128/
+    echo ERROR: Lector install is incomplete - bundled Python runtime not found.
+    echo Expected at: %PY%
+    echo.
+    echo This usually means the installer's dependency-install step was
+    echo cancelled, blocked by antivirus, or failed mid-way. Re-run the
+    echo Lector installer ^(it will overwrite the broken install^).
     goto :fail
 )
-echo [1/4] venv created >> "%LOG%"
 
-call "%VENV%\Scripts\activate.bat"
-
-echo [2/4] Installing PyTorch 2.6.0 + CUDA 12.4  (downloading ~2.5 GB, please wait)...
-pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124 >> "%LOG%" 2>&1
-if errorlevel 1 ( echo ERROR: PyTorch install failed >> "%LOG%" & echo ERROR: PyTorch failed & goto :fail )
-echo [2/4] PyTorch installed >> "%LOG%"
-
-echo [3/4] Installing numpy...
-pip install numpy >> "%LOG%" 2>&1
-if errorlevel 1 ( echo ERROR: numpy failed >> "%LOG%" & goto :fail )
-echo [3/4] numpy installed >> "%LOG%"
-
-echo [4/4] Installing remaining dependencies  (may take a few minutes)...
-pip install -r requirements.txt >> "%LOG%" 2>&1
-if errorlevel 1 ( echo ERROR: requirements.txt install failed >> "%LOG%" & echo ERROR: pip install failed & goto :fail )
-echo [4/4] All dependencies installed >> "%LOG%"
-
-echo.
-echo Setup complete.
-echo.
-goto :launch
-
-:: ── Activate existing venv ────────────────────────────────────────────────────
-:activate
-call "%VENV%\Scripts\activate.bat"
+:: ── Sanity check core deps exist  (catches install-hook silent failure) ───────
+:: Cheap import check against the bundled Python's site-packages. fastapi
+:: imports in <100ms cold; if it's missing, the install hook never ran. Kokoro
+:: and torch are deliberately NOT checked here because they each take many
+:: seconds to import (spaCy/ONNX/CUDA-DLL probing) and would push first-launch
+:: time from O(seconds) to O(minute). Server startup will surface real torch
+:: or kokoro failures via /status returning non-200.
+"%~dp0python\python.exe" -c "import fastapi" 2>>"%LOG%"
 if errorlevel 1 (
-    echo ERROR: activate failed >> "%LOG%"
-    echo ERROR: Could not activate venv. Delete "%VENV%" and rerun.
+    echo ERROR: bundled Python is present but FastAPI failed to import. >> "%LOG%"
+    echo.
+    echo ERROR: Lector dependencies are missing or broken.
+    echo The installer's dependency-install step probably failed.
+    echo Re-run the Lector installer to repair.
+    echo.
+    echo Log: %LOG%
     goto :fail
 )
-echo [OK] venv activated >> "%LOG%"
+echo [OK] core dep import succeeded >> "%LOG%"
 
 :: ── Launch server ─────────────────────────────────────────────────────────────
-:launch
 echo [%date% %time%] Launching server >> "%LOG%"
 echo Starting server at http://127.0.0.1:7860
 echo Log: %LOG%
@@ -91,15 +81,15 @@ echo.
 :: but does not fire when they load inside asyncio.to_thread workers from
 :: an HTTP /tts handler). First /tts call pays a ~15s lazy-load latency;
 :: subsequent calls are warm.
-set LECTOR_SKIP_TTS_PRELOAD=1
+set "LECTOR_SKIP_TTS_PRELOAD=1"
 
 :: Tell server.py we're inside the Tauri shell, not raw dev. Routes
 :: voices/library/cache through platformdirs (install dir is read-only on
 :: Program Files) and suppresses the auto-opened browser tab (Tauri webview
 :: is the UI).
-set LECTOR_PRODUCTION=1
+set "LECTOR_PRODUCTION=1"
 
-"%VENV%\Scripts\pythonw.exe" server.py >> "%LOG%" 2>&1
+"%PY%" server.py >> "%LOG%" 2>&1
 set ERR=%errorlevel%
 echo [%date% %time%] Server exited, code %ERR% >> "%LOG%"
 
